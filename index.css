@@ -1,0 +1,21 @@
+.wc-block-components-product-image,
+.woocommerce ul.products li.product a {
+	position: relative;
+	overflow: hidden;
+}
+
+.product-secondary-image {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	pointer-events: none;
+}
+
+.wc-block-components-product-image:hover .product-secondary-image,
+.woocommerce ul.products li.product a:hover .product-secondary-image {
+	opacity: 1;
+}
