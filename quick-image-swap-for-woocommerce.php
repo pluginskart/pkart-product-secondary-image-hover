@@ -4,12 +4,12 @@
  * Plugin URI:            https://github.com/pluginskart/quick-image-swap-woocommerce
  * Description:           Adds the first WooCommerce gallery image as a hover image inside the product-image block on archive and loop pages.
  * Version:               1.0.1
- * Requires at least:     6.5
+ * Requires at least:     6.7
  * Requires PHP:          8.1
  * Author:                PluginsKart
  * Author URI:            https://www.pluginskart.com/
  * License:               GPL-2.0-or-later
- * License URI:            https://www.gnu.org/licenses/gpl-2.0.html
+ * License URI:           https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:           quick-image-swap-for-woocommerce
  */
 
