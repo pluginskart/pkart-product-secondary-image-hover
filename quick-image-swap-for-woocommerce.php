@@ -2,8 +2,8 @@
 /**
  * Plugin Name:           Quick Image Swap for WooCommerce
  * Plugin URI:            https://github.com/pluginskart/quick-image-swap-woocommerce
- * Description:           Adds the first WooCommerce gallery image as a hover image inside the product-image block on archive and loop pages.
- * Version:               1.1.0
+ * Description:           Automatically displays the first WooCommerce product gallery image when hovering over product images.
+ * Version:               1.0.0
  * Requires at least:     6.7
  * Requires PHP:          8.1
  * Author:                PluginsKart
@@ -11,6 +11,7 @@
  * License:               GPL-2.0-or-later
  * License URI:           https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:           quick-image-swap-for-woocommerce
+ * Requires Plugins:      woocommerce
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,9 +26,9 @@ function pkart_product_image_swap_enqueue_styles() {
 
 	wp_enqueue_style(
 		'quick-image-swap-for-woocommerce',
-		plugin_dir_url( __FILE__ ) . 'index.css',
+		plugin_dir_url( __FILE__ ) . 'assets/css/style.css',
 		array(),
-		'1.1.0'
+		'1.0.0'
 	);
 }
 
