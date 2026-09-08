@@ -3,7 +3,7 @@
  * Plugin Name:           Quick Image Swap for WooCommerce
  * Plugin URI:            https://github.com/pluginskart/quick-image-swap-woocommerce
  * Description:           Adds the first WooCommerce gallery image as a hover image inside the product-image block on archive and loop pages.
- * Version:               1.0.1
+ * Version:               1.1.0
  * Requires at least:     6.7
  * Requires PHP:          8.1
  * Author:                PluginsKart
@@ -27,7 +27,7 @@ function pkart_product_image_swap_enqueue_styles() {
 		'quick-image-swap-for-woocommerce',
 		plugin_dir_url( __FILE__ ) . 'index.css',
 		array(),
-		'1.0.1'
+		'1.1.0'
 	);
 }
 

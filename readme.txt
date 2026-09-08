@@ -9,6 +9,10 @@ Stable tag: 1.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
+== Short Description ==
+
+Add a CSS-only hover image swap to WooCommerce product loops and Product Collection blocks with no JavaScript or settings page required.
+
 == Description ==
 
 Quick Image Swap for WooCommerce displays the first image from a WooCommerce product's gallery when visitors hover over the product image.
