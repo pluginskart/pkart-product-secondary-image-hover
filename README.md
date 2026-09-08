@@ -46,12 +46,23 @@ No additional configuration is required.
 
 ## Installation
 
+### Method 1: WordPress Admin
+
 1. Make sure WooCommerce is installed and activated.
 2. Upload the plugin ZIP file through Plugins > Add New Plugin > Upload Plugin.
 3. Install the plugin.
 4. Activate Quick Image Swap for WooCommerce.
 5. Visit your WooCommerce shop or product archive.
 6. Hover over a product image that has a gallery image.
+
+### Method 2: Manual Installation
+
+1. Extract the plugin ZIP file.
+2. Upload the plugin folder to: /wp-content/plugins/
+3. Log in to the WordPress dashboard.
+4. Go to Plugins → Installed Plugins.
+5. Locate "Quick Image Swap for WooCommerce".
+6. Click Activate.
 
 The first gallery image will appear when hovering over the product image.
 
@@ -97,9 +108,17 @@ Yes. The secondary image uses the product-secondary-image CSS class. You can cus
 
 ## Screenshots
 
-1. Product image before hovering.
-2. Product image displaying the first gallery image on hover.
-3. WooCommerce product listing with image hover enabled.
+The plugin currently includes the following screenshots in the `assets` folder:
+
+- `assets/screenshot-1.png` — product image before hovering
+- `assets/screenshot-2.png` — product image displaying the first gallery image on hover
+
+```md
+![Product image before hovering](assets/screenshot-1.png)
+![Product image displaying the first gallery image on hover](assets/screenshot-2.png)
+```
+
+These screenshots should use a clean product catalog layout and the same aspect ratio for a consistent display in the WordPress plugin directory. If needed, you can also add an optional `assets/screenshot-3.png` later.
 
 ## Customization
 
