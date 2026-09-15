@@ -18,6 +18,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+define( 'PKART_QUICK_IMAGE_SWAP_VERSION', '1.0.0' );
+define( 'PKART_QUICK_IMAGE_SWAP_FILE', __FILE__ );
+define( 'PKART_QUICK_IMAGE_SWAP_DIR', plugin_dir_path( __FILE__ ) );
+
+require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-api.php';
+require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-licensing.php';
+require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
+
+/**
+ * Return the plugin licensing facade.
+ */
+function pkart_quick_image_swap_licensing() {
+	static $licensing;
+
+	if ( ! $licensing ) {
+		$licensing = new \PluginsKart\LicenseManager\V1\Licensing();
+	}
+
+	return $licensing;
+}
+
+if ( is_admin() ) {
+	new \PluginsKart\QuickImageSwap\Admin( pkart_quick_image_swap_licensing() );
+}
+
 
 /**
  * Enqueue plugin CSS.
@@ -47,6 +72,10 @@ add_action( 'wp_enqueue_scripts', 'pkart_product_image_swap_enqueue_styles' );
  * @return string
  */
 function pkart_product_image_append_gallery( $block_content, $block, $block_instance ) {
+
+	if ( ! pkart_quick_image_swap_licensing()->is_active() ) {
+		return $block_content;
+	}
 
 	// Only target the WooCommerce product image block.
 	if (

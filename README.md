@@ -9,7 +9,7 @@
 - License: GPL-2.0-or-later
 - License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Add a CSS-only hover image swap to WooCommerce product loops and Product Collection blocks with no JavaScript or settings page required.
+Add a CSS-only hover image swap to WooCommerce product loops and Product Collection blocks with no JavaScript required.
 
 ## Description
 
@@ -21,6 +21,42 @@ It provides a simple CSS-based hover effect without requiring JavaScript or a co
 
 The plugin does not modify the product image gallery on single-product pages.
 
+The PRO feature is license-gated. Activate the plugin from **Settings -> Quick Image Swap PRO** before the hover image feature is enabled.
+
+## Licensing SDK Integration
+
+The plugin includes a small PluginsKart licensing facade under `includes/licensing/` and a WordPress admin licensing screen.
+It uses the local PluginsKart SDK API mock by default and does not make requests until
+one of these methods is called:
+
+```php
+$licensing = pkart_quick_image_swap_licensing();
+
+$activation = $licensing->activate(
+	'PKMOCK-2026-TEST-0001',
+	'quick-image-swap-for-woocommerce',
+	home_url(),
+	'1.0.0'
+);
+
+$validation = $licensing->validate(
+	'PKMOCK-2026-TEST-0001',
+	'quick-image-swap-for-woocommerce',
+	home_url(),
+	'1.0.0'
+);
+
+$update = $licensing->update(
+	'PKMOCK-2026-TEST-0001',
+	'quick-image-swap-for-woocommerce',
+	'1.0.0'
+);
+```
+
+Switch the API base URL with the `pluginskart_quick_image_swap_license_api_url`
+filter when connecting to the production API. The mock API key
+`PKMOCK-2026-TEST-0001` activates the local development flow.
+
 ## Features
 
 * Display the first product gallery image on hover.
@@ -30,7 +66,7 @@ The plugin does not modify the product image gallery on single-product pages.
 * CSS-only hover effect.
 * No JavaScript required.
 * No shortcode required.
-* No settings page required.
+* PRO license activation, validation, and deactivation.
 * Automatically skips products without gallery images.
 * Does not modify single-product pages.
 * Lightweight frontend implementation.
