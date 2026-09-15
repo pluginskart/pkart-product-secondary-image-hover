@@ -21,7 +21,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
          */
         public function __construct( API $api = null, $plugin_slug = 'plugin' ) {
             $this->api        = $api ?: new API();
-            $this->option_key = $this->build_option_key( $plugin_slug );
+            $this->option_key = 'pkart_' . ( sanitize_key( $plugin_slug ) ?: 'plugin' ) . '_license';
         }
 
         /**
@@ -146,6 +146,15 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
         }
 
         /**
+         * Return all package.json configuration values.
+         *
+         * @return array<string, mixed>
+         */
+        public function package_config() {
+            return $this->api->package_config();
+        }
+
+        /**
          * Send a license action request.
          */
         private function license_request( $action, $license_key, $product_sku, $domain, $plugin_version = '' ) {
@@ -191,13 +200,5 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
             delete_option( $this->option_key );
         }
 
-        /**
-         * Build the unique option key for a plugin.
-         */
-        private function build_option_key( $plugin_slug ) {
-            $plugin_slug = sanitize_key( $plugin_slug ) ?: 'plugin';
-
-            return 'pkart_' . $plugin_slug . '_license';
-        }
     }
 }

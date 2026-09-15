@@ -12,16 +12,16 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
 
     class Admin {
 
-        const PRODUCT_SKU = 'quick-image-swap-for-woocommerce';
-
         /** @var Licensing */
         private $licensing;
+        private $product_sku;
 
         /**
          * Register the PRO license admin workflow.
          */
         public function __construct( Licensing $licensing ) {
-            $this->licensing = $licensing;
+            $this->licensing   = $licensing;
+            $this->product_sku = $this->package_value( 'product_sku' );
 
             add_action( 'admin_menu', [ $this, 'register_menu' ] );
             add_action( 'admin_post_pkart_quick_image_swap_license', [ $this, 'handle_license_action' ] );
@@ -50,7 +50,10 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
 
             check_admin_referer( 'pkart_quick_image_swap_license' );
 
-            $response = $this->process_license_action( $this->request_action() );
+            $response = $this->process_license_action(
+                $this->request_action(),
+                $this->request_license_key()
+            );
             $this->store_license_notice( $response );
 
             wp_safe_redirect( admin_url( 'options-general.php?page=pkart-quick-image-swap-license' ) );
@@ -68,17 +71,19 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
 
         /**
          * Process one supported license action.
+         *
+         * This public method can also be called by another plugin integration.
+         *
+         * @param string $action     License action: activate, validate, or deactivate.
+         * @param string $license_key License key for activation.
+         * @return array|\WP_Error
          */
-        private function process_license_action( $action ) {
+        public function process_license_action( $action, $license_key = '' ) {
             switch ( $action ) {
                 case 'activate':
-                    $license_key = isset( $_POST['license_key'] )
-                        ? sanitize_text_field( wp_unslash( $_POST['license_key'] ) )
-                        : '';
-
                     return $this->licensing->activate_for_site(
-                        $license_key,
-                        self::PRODUCT_SKU,
+                        sanitize_text_field( $license_key ),
+                        $this->product_sku,
                         home_url(),
                         PKART_QUICK_IMAGE_SWAP_VERSION
                     );
@@ -95,6 +100,27 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                         __( 'Invalid license action.', 'quick-image-swap-for-woocommerce' )
                     );
             }
+        }
+
+        /**
+         * Return the submitted license key.
+         */
+        private function request_license_key() {
+            return isset( $_POST['license_key'] )
+                ? sanitize_text_field( wp_unslash( $_POST['license_key'] ) )
+                : '';
+        }
+
+        /**
+         * Return one value from the package metadata.
+         */
+        private function package_value( $key, $default = '' ) {
+            $config = $this->licensing->package_config();
+            $value  = $config['pluginskart-data'][ $key ] ?? $default;
+
+            return is_string( $value ) && '' !== trim( $value )
+                ? sanitize_text_field( $value )
+                : $default;
         }
 
         /**

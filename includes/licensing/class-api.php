@@ -34,7 +34,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             }
 
             $method = strtoupper( $method );
-            $url    = trailingslashit( $this->base_url() ) . ltrim( $path, '/' );
+            $url    = trailingslashit( $this->package_config()['pluginskart-data']['api_base_url'] ?? '' ) . ltrim( $path, '/' );
             $args   = [
                 'method'  => $method,
                 'timeout' => self::REQUEST_TIMEOUT,
@@ -82,27 +82,22 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
         }
 
         /**
-         * Return the configured licensing API base URL.
+         * Return all values from the plugin package.json configuration.
+         *
+         * The file is read once per API instance, so changes to package.json
+         * are available automatically when the plugin loads a new instance.
+         *
+         * @return array<string, mixed>
          */
-        private function base_url() {
-            $package_config = $this->package_config();
-            $base_url       = $package_config['pluginskart-data']['api_base_url'] ?? '';
-
-            return is_string( $base_url ) ? trim( $base_url ) : '';
-        }
-
-        /**
-         * Read and cache the plugin package configuration.
-         */
-        private function package_config() {
+        public function package_config() {
             if ( null !== $this->package_config ) {
                 return $this->package_config;
             }
 
             $package_file = dirname( __DIR__, 2 ) . '/package.json';
             $package_data = is_readable( $package_file )
-                ? json_decode( file_get_contents( $package_file ), true )
-                : [];
+                ? wp_json_file_decode( $package_file, [ 'associative' => true ] )
+                : null;
 
             $this->package_config = is_array( $package_data ) ? $package_data : [];
 
