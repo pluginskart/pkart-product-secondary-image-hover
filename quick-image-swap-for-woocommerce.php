@@ -33,7 +33,10 @@ function pkart_quick_image_swap_licensing() {
 	static $licensing;
 
 	if ( ! $licensing ) {
-		$licensing = new \PluginsKart\LicenseManager\V1\Licensing();
+		$licensing = new \PluginsKart\LicenseManager\V1\Licensing(
+			null,
+			'quick-image-swap-for-woocommerce'
+		);
 	}
 
 	return $licensing;

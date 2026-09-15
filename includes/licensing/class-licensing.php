@@ -12,16 +12,16 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
 
     class Licensing {
 
-        const OPTION_KEY = 'pkart_quick_image_swap_license';
-
         /** @var API */
         private $api;
+        private $option_key;
 
         /**
-         * Create the licensing facade.
+         * Create the licensing facade for a plugin slug.
          */
-        public function __construct( API $api = null ) {
-            $this->api = $api ?: new API();
+        public function __construct( API $api = null, $plugin_slug = 'plugin' ) {
+            $this->api        = $api ?: new API();
+            $this->option_key = $this->build_option_key( $plugin_slug );
         }
 
         /**
@@ -71,7 +71,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
             }
 
             update_option(
-                self::OPTION_KEY,
+                $this->option_key,
                 [
                     'license_key' => sanitize_text_field( $license_key ),
                     'product_sku' => sanitize_text_field( $product_sku ),
@@ -131,7 +131,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
          * Return the locally stored license state.
          */
         public function get_stored() {
-            $license = get_option( self::OPTION_KEY, [] );
+            $license = get_option( $this->option_key, [] );
 
             return is_array( $license ) ? $license : [];
         }
@@ -188,7 +188,16 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
          * Remove the stored license state.
          */
         private function clear_stored_license() {
-            delete_option( self::OPTION_KEY );
+            delete_option( $this->option_key );
+        }
+
+        /**
+         * Build the unique option key for a plugin.
+         */
+        private function build_option_key( $plugin_slug ) {
+            $plugin_slug = sanitize_key( $plugin_slug ) ?: 'plugin';
+
+            return 'pkart_' . $plugin_slug . '_license';
         }
     }
 }
