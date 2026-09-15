@@ -18,8 +18,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PKART_QUICK_IMAGE_SWAP_VERSION', '1.0.0' );
-define( 'PKART_QUICK_IMAGE_SWAP_FILE', __FILE__ );
 define( 'PKART_QUICK_IMAGE_SWAP_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-api.php';
