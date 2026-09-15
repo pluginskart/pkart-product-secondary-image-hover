@@ -99,7 +99,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
                 $license['license_key'],
                 $license['product_sku'],
                 $license['domain'] ?? home_url(),
-                PKART_QUICK_IMAGE_SWAP_VERSION
+                $this->package_value( 'version' )
             );
         }
 
@@ -146,15 +146,6 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
         }
 
         /**
-         * Return all package.json configuration values.
-         *
-         * @return array<string, mixed>
-         */
-        public function package_config() {
-            return $this->api->package_config();
-        }
-
-        /**
          * Send a license action request.
          */
         private function license_request( $action, $license_key, $product_sku, $domain, $plugin_version = '' ) {
@@ -189,7 +180,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
         private function missing_license_error() {
             return new \WP_Error(
                 'pluginskart_license_missing',
-                __( 'No license is activated.', 'quick-image-swap-for-woocommerce' )
+                __( 'No license is activated.', $this->api->package_value( 'product_sku' ) )
             );
         }
 

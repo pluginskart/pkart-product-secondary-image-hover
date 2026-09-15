@@ -29,12 +29,13 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( ! $path ) {
                 return new \WP_Error(
                     'pluginskart_invalid_action',
-                    __( 'The licensing action is invalid.', 'quick-image-swap-for-woocommerce' )
+                    __( 'The licensing action is invalid.', $this->package_value( 'product_sku' ) )
                 );
             }
 
             $method = strtoupper( $method );
-            $url    = trailingslashit( $this->package_config()['pluginskart-data']['api_base_url'] ?? '' ) . ltrim( $path, '/' );
+            $api_base_url = $this->package_value( 'api_base_url' );
+            $url          = trailingslashit( $api_base_url ) . ltrim( $path, '/' );
             $args   = [
                 'method'  => $method,
                 'timeout' => self::REQUEST_TIMEOUT,
@@ -54,7 +55,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
                 if ( false === $args['body'] ) {
                     return new \WP_Error(
                         'pluginskart_request_encode_failed',
-                        __( 'The licensing request could not be encoded.', 'quick-image-swap-for-woocommerce' )
+                        __( 'The licensing request could not be encoded.', $this->package_value( 'product_sku' ) )
                     );
                 }
             }
@@ -71,7 +72,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( ! is_array( $body ) ) {
                 return new \WP_Error(
                     'pluginskart_invalid_response',
-                    __( 'The licensing API returned an invalid response.', 'quick-image-swap-for-woocommerce' ),
+                    __( 'The licensing API returned an invalid response.', $this->package_value( 'product_sku' ) ),
                     [ 'status' => $status ]
                 );
             }
@@ -102,6 +103,17 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             $this->package_config = is_array( $package_data ) ? $package_data : [];
 
             return $this->package_config;
+        }
+
+        /**
+         * Return one value from the package metadata.
+         */
+        public function package_value( $key, $default = '' ) {
+            $value = $this->package_config()['pluginskart-data'][ $key ] ?? $default;
+
+            return is_string( $value ) && '' !== trim( $value )
+                ? sanitize_text_field( $value )
+                : $default;
         }
 
         /**

@@ -11,6 +11,8 @@
 		"author_profile": "https://pluginskart.com",
 		"download_url": "https://github.com/pluginskart/quick-image-swap-for-woocommerce/tree/beta-licensing",
 		"tested": "6.7",
+		"version": "1.0.0",
+		"new-version": "1.1.0",
 		"requires": "6.5",
 		"requires_php": "8.2",
 		"last_updated": "2023-10-04 15:51:00"

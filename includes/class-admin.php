@@ -13,6 +13,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
     class Admin {
 
         /** @var Licensing */
+		/** @var API */
+        private $api;
         private $licensing;
         private $product_sku;
 
@@ -20,8 +22,9 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
          * Register the PRO license admin workflow.
          */
         public function __construct( Licensing $licensing ) {
-            $this->licensing   = $licensing;
-            $this->product_sku = $this->package_value( 'product_sku' );
+            $this->licensing = $licensing;
+            $config          = $licensing->package_config();
+            $this->product_sku = $config['pluginskart-data']['product_sku'] ?? '';
 
             add_action( 'admin_menu', [ $this, 'register_menu' ] );
             add_action( 'admin_post_pkart_quick_image_swap_license', [ $this, 'handle_license_action' ] );
@@ -32,8 +35,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
          */
         public function register_menu() {
             add_options_page(
-                __( 'Quick Image Swap PRO', 'quick-image-swap-for-woocommerce' ),
-                __( 'Quick Image Swap PRO', 'quick-image-swap-for-woocommerce' ),
+                __( 'Quick Image Swap PRO', $this->api->package_value( 'product_sku' ) ),
+                __( 'Quick Image Swap PRO', $this->api->package_value( 'product_sku' ) ),
                 'manage_options',
                 'pkart-quick-image-swap-license',
                 [ $this, 'render_page' ]
@@ -45,7 +48,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
          */
         public function handle_license_action() {
             if ( ! current_user_can( 'manage_options' ) ) {
-                wp_die( esc_html__( 'You are not allowed to manage this license.', 'quick-image-swap-for-woocommerce' ) );
+                wp_die( esc_html__( 'You are not allowed to manage this license.', $this->api->package_value( 'product_sku' ) ) );
             }
 
             check_admin_referer( 'pkart_quick_image_swap_license' );
@@ -83,9 +86,9 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                 case 'activate':
                     return $this->licensing->activate_for_site(
                         sanitize_text_field( $license_key ),
-                        $this->product_sku,
+                        $this->api->package_value( 'product_sku' ),
                         home_url(),
-                        PKART_QUICK_IMAGE_SWAP_VERSION
+                        $this->api->package_value( 'version' )
                     );
 
                 case 'validate':
@@ -97,7 +100,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                 default:
                     return new \WP_Error(
                         'pluginskart_invalid_license_action',
-                        __( 'Invalid license action.', 'quick-image-swap-for-woocommerce' )
+                        __( 'Invalid license action.', $this->api->package_value( 'product_sku' ) )
                     );
             }
         }
@@ -112,25 +115,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
         }
 
         /**
-         * Return one value from the package metadata.
-         */
-        private function package_value( $key, $default = '' ) {
-            $config = $this->licensing->package_config();
-            $value  = $config['pluginskart-data'][ $key ] ?? $default;
-
-            return is_string( $value ) && '' !== trim( $value )
-                ? sanitize_text_field( $value )
-                : $default;
-        }
-
-        /**
          * Store a one-time admin notice for the license page.
          */
         private function store_license_notice( $response ) {
             $success = ! is_wp_error( $response ) && ! empty( $response['success'] );
             $message = is_wp_error( $response )
                 ? $response->get_error_message()
-                : ( $response['message'] ?? __( 'License request completed.', 'quick-image-swap-for-woocommerce' ) );
+                : ( $response['message'] ?? __( 'License request completed.', $this->api->package_value( 'product_sku' ) ) );
 
             set_transient(
                 'pkart_quick_image_swap_license_notice_' . get_current_user_id(),
@@ -160,8 +151,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
          */
         public function render_license_section( array $args = [] ) {
             $defaults = [
-                'title'       => __( 'Quick Image Swap PRO License', 'quick-image-swap-for-woocommerce' ),
-                'description' => __( 'Activate your license key to enable PRO updates and licensing validation.', 'quick-image-swap-for-woocommerce' ),
+                'title'       => __( 'Quick Image Swap PRO License', $this->api->package_value( 'product_sku' ) ),
+                'description' => __( 'Activate your license key to enable PRO updates and licensing validation.', $this->api->package_value( 'product_sku' ) ),
             ];
             $args     = wp_parse_args( $args, $defaults );
             $license  = $this->licensing->get_stored();
@@ -186,7 +177,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                 <input type="hidden" name="action" value="pkart_quick_image_swap_license">
                 <table class="form-table" role="presentation">
                     <tr>
-                        <th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', 'quick-image-swap-for-woocommerce' ); ?></label></th>
+                        <th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', $this->api->package_value( 'product_sku' ) ); ?></label></th>
                         <td>
                             <input
                                 type="text"
@@ -196,14 +187,14 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                                 value="<?php echo esc_attr( $license['license_key'] ?? '' ); ?>"
                                 autocomplete="off"
                             >
-                            <p class="description"><?php esc_html_e( 'Mock valid key: PKMOCK-2026-TEST-0001', 'quick-image-swap-for-woocommerce' ); ?></p>
+                            <p class="description"><?php esc_html_e( 'Mock valid key: PKMOCK-2026-TEST-0001', $this->api->package_value( 'product_sku' ) ); ?></p>
                         </td>
                     </tr>
                 </table>
                 <p class="submit">
-                    <button class="button button-primary" type="submit" name="license_action" value="activate"><?php esc_html_e( 'Activate License', 'quick-image-swap-for-woocommerce' ); ?></button>
-                    <button class="button" type="submit" name="license_action" value="validate"><?php esc_html_e( 'Validate License', 'quick-image-swap-for-woocommerce' ); ?></button>
-                    <button class="button" type="submit" name="license_action" value="deactivate"><?php esc_html_e( 'Deactivate License', 'quick-image-swap-for-woocommerce' ); ?></button>
+                    <button class="button button-primary" type="submit" name="license_action" value="activate"><?php esc_html_e( 'Activate License', $this->api->package_value( 'product_sku' ) ); ?></button>
+                    <button class="button" type="submit" name="license_action" value="validate"><?php esc_html_e( 'Validate License', $this->api->package_value( 'product_sku' ) ); ?></button>
+                    <button class="button" type="submit" name="license_action" value="deactivate"><?php esc_html_e( 'Deactivate License', $this->api->package_value( 'product_sku' ) ); ?></button>
                 </p>
             </form>
             <?php
