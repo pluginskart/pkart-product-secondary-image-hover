@@ -1,0 +1,17 @@
+{
+	"name": "quick-image-swap-for-woocommerce",
+	"version": "1.0.0",
+	"description": "Quick Image Swap for WooCommerce",
+	"author": "PluginsKart",
+	"pluginskart-data": {
+		"api_base_url": "http://localhost:8888/wp-json/pluginskart-sdk/v1/",
+		"title": "Quick Image Swap for WooCommerce",
+		"author": "PluginsKart",
+		"author_profile": "https://pluginskart.com",
+		"download_url": "https://github.com/pluginskart/quick-image-swap-for-woocommerce/tree/beta-licensing",
+		"tested": "6.7",
+		"requires": "6.5",
+		"requires_php": "8.2",
+		"last_updated": "2023-10-04 15:51:00"
+	}
+}
