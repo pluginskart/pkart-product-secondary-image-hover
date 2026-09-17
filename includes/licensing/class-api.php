@@ -84,6 +84,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\API' ) ) {
 				'method'      => $method,
 				'timeout'     => self::REQUEST_TIMEOUT,
 				'redirection' => 3,
+				'sslverify'   => (bool) apply_filters(
+					'pluginskart_license_api_sslverify',
+					! $this->is_local_api_url( $api_base_url ),
+					$api_base_url
+				),
 				'headers'     => array(
 					'Accept'       => 'application/json',
 					'Content-Type' => 'application/json',
@@ -165,6 +170,21 @@ if ( ! class_exists( __NAMESPACE__ . '\\API' ) ) {
 		 */
 		private function path( $action ) {
 			return isset( $this->paths[ $action ] ) ? $this->paths[ $action ] : '';
+		}
+
+		/**
+		 * Identify local development API hosts.
+		 *
+		 * @param string $url API URL.
+		 * @return bool
+		 */
+		private function is_local_api_url( $url ) {
+			$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+
+			return 'localhost' === $host
+				|| '127.0.0.1' === $host
+				|| '::1' === $host
+				|| (bool) preg_match( '/\.local$/', $host );
 		}
 
 		/**
