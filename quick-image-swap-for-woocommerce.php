@@ -20,29 +20,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'PKART_QUICK_IMAGE_SWAP_DIR', plugin_dir_path( __FILE__ ) );
 
+require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-package-config.php';
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-api.php';
+require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-admin.php';
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-licensing.php';
-require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
 
 /**
- * Return the plugin licensing facade.
+ * Initialize the reusable PluginsKart Licensing SDK.
  */
 function pkart_quick_image_swap_licensing() {
-	static $licensing;
+	static $licensing = null;
 
-	if ( ! $licensing ) {
-		$licensing = new \PluginsKart\LicenseManager\V1\Licensing(
-			null,
-			'quick-image-swap-for-woocommerce'
-		);
+	if ( null === $licensing ) {
+		$licensing = \PluginsKart\LicenseManager\V1\Licensing::init( __FILE__ );
 	}
 
 	return $licensing;
 }
 
-if ( is_admin() ) {
-	new \PluginsKart\QuickImageSwap\Admin( pkart_quick_image_swap_licensing() );
-}
+pkart_quick_image_swap_licensing();
 
 
 /**
