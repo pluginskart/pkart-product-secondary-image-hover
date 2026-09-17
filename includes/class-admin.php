@@ -3,6 +3,7 @@
 namespace PluginsKart\QuickImageSwap;
 
 use PluginsKart\LicenseManager\V1\Licensing;
+use PluginsKart\LicenseManager\V1\Licensing\API;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -23,7 +24,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
          */
         public function __construct( Licensing $licensing ) {
             $this->licensing = $licensing;
-            $config          = $licensing->package_config();
+            $this->api       = new API();
+            $config          = $this->api->package_config();
             $this->product_sku = $config['pluginskart-data']['product_sku'] ?? '';
 
             add_action( 'admin_menu', [ $this, 'register_menu' ] );
