@@ -73,10 +73,11 @@ if ( ! class_exists( __NAMESPACE__ . '\\Licensing' ) ) {
 		 *
 		 *     Licensing::init();
 		 *
-		 * @param string $plugin_file Optional file inside the plugin.
+		 * @param string $plugin_file          Optional file inside the plugin.
+		 * @param bool   $register_admin_page Whether to register the SDK admin page.
 		 * @return self|\WP_Error
 		 */
-		public static function init( $plugin_file = '' ) {
+		public static function init( $plugin_file = '', $register_admin_page = true ) {
 			if ( ! $plugin_file ) {
 				$trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 2 );
 				$plugin_file = isset( $trace[1]['file'] ) ? $trace[1]['file'] : '';
@@ -100,7 +101,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Licensing' ) ) {
 			$instance = new self( $config );
 			self::$instances[ $key ] = $instance;
 
-			$instance->register_hooks();
+			$instance->register_hooks( $register_admin_page );
 
 			return $instance;
 		}
@@ -114,23 +115,73 @@ if ( ! class_exists( __NAMESPACE__ . '\\Licensing' ) ) {
 			$this->config               = $config;
 			$this->api                  = new API( $config );
 			$this->option_key           = 'pkart_' . $config->plugin_slug() . '_license';
-			$this->update_transient_key = $this->build_update_transient_key();
 			$this->plugin_basename      = $config->plugin_basename();
 		}
 
 		/**
 		 * Register WordPress hooks used by the SDK.
 		 */
-		private function register_hooks() {
-			if ( is_admin() ) {
+		private function register_hooks( $register_admin_page = true ) {
+			if ( is_admin() && $register_admin_page ) {
 				$admin = new Admin( $this );
 
 				add_action( 'admin_menu', array( $admin, 'register_menu' ) );
-				add_action( 'admin_post_' . $this->admin_action(), array( $admin, 'handle_license_action' ) );
+			} elseif ( is_admin() ) {
+				add_action( 'admin_post_' . $this->admin_action(), array( $this, 'handle_license_action' ) );
 			}
 
 			add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_plugin_update' ) );
 			add_filter( 'plugins_api', array( $this, 'plugin_information' ), 10, 3 );
+		}
+
+		/**
+		 * Handle license actions submitted by a plugin-owned settings page.
+		 */
+		public function handle_license_action() {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die(
+					esc_html__( 'You are not allowed to manage this license.', $this->text_domain() )
+				);
+			}
+
+			check_admin_referer( $this->nonce_action() );
+
+			$action      = isset( $_POST['license_action'] )
+				? sanitize_key( wp_unslash( $_POST['license_action'] ) )
+				: '';
+			$license_key = isset( $_POST['license_key'] )
+				? sanitize_text_field( wp_unslash( $_POST['license_key'] ) )
+				: '';
+
+			switch ( $action ) {
+				case 'activate':
+					$response = $this->activate( $license_key );
+					break;
+				case 'validate':
+					$response = $this->validate();
+					break;
+				case 'deactivate':
+					$response = $this->deactivate();
+					break;
+				default:
+					$response = new \WP_Error(
+						'pluginskart_invalid_license_action',
+						__( 'Invalid license action.', $this->text_domain() )
+					);
+			}
+
+			$redirect_url = apply_filters(
+				'pluginskart_license_action_redirect',
+				add_query_arg(
+					array( 'page' => $this->admin_page_slug() ),
+					admin_url( 'options-general.php' )
+				),
+				$this,
+				$response
+			);
+
+			wp_safe_redirect( $redirect_url );
+			exit;
 		}
 
 		/**
@@ -572,19 +623,6 @@ if ( ! class_exists( __NAMESPACE__ . '\\Licensing' ) ) {
 		private function clear_stored_license() {
 			delete_option( $this->option_key );
 			delete_transient( $this->update_transient_key );
-		}
-
-		/**
-		 * Build a bounded per-plugin update transient name.
-		 *
-		 * @return string
-		 */
-		private function build_update_transient_key() {
-			$key = 'pkart_' . $this->config->plugin_slug() . '_update_check';
-
-			return strlen( $key ) <= 172
-				? $key
-				: 'pkart_update_' . md5( $this->config->package_file() );
 		}
 
 		/**
