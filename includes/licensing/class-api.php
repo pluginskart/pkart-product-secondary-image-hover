@@ -222,40 +222,6 @@ if ( ! class_exists( __NAMESPACE__ . '\\API' ) ) {
 		}
 
 		/**
-		 * Validate a trusted package.json API endpoint.
-		 *
-		 * HTTPS is required for non-local endpoints. HTTP localhost/loopback
-		 * endpoints remain available for the local Mock API environment.
-		 *
-		 * @param string $url API URL.
-		 * @return bool
-		 */
-		private function is_valid_api_url( $url ) {
-			$parts = wp_parse_url( $url );
-
-			if ( empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
-				return false;
-			}
-
-			$scheme = strtolower( $parts['scheme'] );
-			$host   = strtolower( $parts['host'] );
-
-			if ( ! in_array( $scheme, array( 'http', 'https' ), true ) ) {
-				return false;
-			}
-
-			if ( 'http' === $scheme && ! in_array( $host, array( 'localhost', '127.0.0.1', '::1' ), true ) ) {
-				return false;
-			}
-
-			if ( in_array( $host, array( 'localhost', '127.0.0.1', '::1' ), true ) ) {
-				return true;
-			}
-
-			return (bool) wp_http_validate_url( $url );
-		}
-
-		/**
 		 * Return the plugin text domain.
 		 *
 		 * @return string
