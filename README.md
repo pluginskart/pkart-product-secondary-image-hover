@@ -21,7 +21,7 @@ It provides a simple CSS-based hover effect without requiring JavaScript or a co
 
 The plugin does not modify the product image gallery on single-product pages.
 
-The PRO feature is license-gated. Activate the plugin from **Settings -> Quick Image Swap PRO** before the hover image feature is enabled.
+The PRO feature is license-gated. Activate the plugin from **Settings -> Quick Image Swap -> Licensing** before the hover image feature is enabled.
 
 ## Licensing SDK Integration
 

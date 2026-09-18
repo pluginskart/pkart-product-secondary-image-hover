@@ -30,7 +30,7 @@ The plugin does not modify the product image gallery on single-product pages.
 * CSS-only hover effect.
 * No JavaScript required.
 * No shortcode required.
-* No settings page required.
+* Licensing is available from the plugin's Settings -> Licensing tab.
 * Automatically skips products without gallery images.
 * Does not modify single-product pages.
 * Lightweight frontend implementation.
