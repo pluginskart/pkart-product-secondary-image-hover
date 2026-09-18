@@ -29,18 +29,23 @@ require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
  * Return the plugin licensing facade.
  */
 function pkart_quick_image_swap_licensing() {
-	static $licensing;
+	static $licensing = null;
+	static $admin     = null;
 
-	if ( ! $licensing ) {
+	if ( null === $licensing ) {
 		$config = new \PluginsKart\LicenseManager\V1\PackageConfig( __FILE__ );
 		$licensing = new \PluginsKart\LicenseManager\V1\Licensing( $config );
+
+		if ( is_admin() ) {
+			$admin = new \PluginsKart\QuickImageSwap\Admin( $licensing );
+		}
 	}
 
 	return $licensing;
 }
 
 if ( is_admin() ) {
-	new \PluginsKart\QuickImageSwap\Admin( pkart_quick_image_swap_licensing() );
+	pkart_quick_image_swap_licensing();
 }
 
 

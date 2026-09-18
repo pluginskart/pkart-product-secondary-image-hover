@@ -46,7 +46,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( ! $path ) {
                 return new \WP_Error(
                     'pluginskart_invalid_action',
-                    __( 'The licensing action is invalid.', $this->text_domain() )
+                    __( 'The licensing action is invalid.', $this->config->package_value( 'product_sku' ) )
                 );
             }
 
@@ -79,7 +79,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
                 if ( false === $args['body'] ) {
                     return new \WP_Error(
                         'pluginskart_request_encode_failed',
-                        __( 'The licensing request could not be encoded.', $this->text_domain() )
+                        __( 'The licensing request could not be encoded.', $this->config->package_value( 'product_sku' ) )
                     );
                 }
             }
@@ -96,7 +96,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( ! is_array( $body ) ) {
                 return new \WP_Error(
                     'pluginskart_invalid_response',
-                    __( 'The licensing API returned an invalid response.', $this->text_domain() ),
+                    __( 'The licensing API returned an invalid response.', $this->config->package_value( 'product_sku' ) ),
                     [ 'status' => $status ]
                 );
             }
@@ -117,24 +117,20 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
          * Sanitize scalar API values and reject arrays or objects.
          */
         private function sanitize_data( array $data ) {
-            $sanitized = [];
+			$sanitized = array();
 
-            foreach ( $data as $key => $value ) {
-                if ( ! is_scalar( $value ) ) {
-                    continue;
-                }
+			foreach ( $data as $key => $value ) {
+				$key = sanitize_key( $key );
 
-                $key = sanitize_key( $key );
+				if ( '' === $key || ! is_scalar( $value ) ) {
+					continue;
+				}
 
-                if ( '' === $key ) {
-                    continue;
-                }
+				$sanitized[ $key ] = sanitize_text_field( (string) $value );
+			}
 
-                $sanitized[ $key ] = sanitize_text_field( (string) $value );
-            }
-
-            return $sanitized;
-        }
+			return $sanitized;
+		}
 
 		/**
 		 * Check whether API URL belongs to local development.
@@ -164,15 +160,6 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			}
 
 			return (bool) preg_match( '/\.local$/', $host );
-		}
-
-		/**
-		 * Get plugin text domain.
-		 *
-		 * @return string
-		 */
-		private function text_domain() {
-			return $this->config->plugin_slug();
 		}
 
 		/**
