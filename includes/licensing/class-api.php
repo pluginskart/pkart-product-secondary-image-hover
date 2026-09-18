@@ -1,233 +1,195 @@
 <?php
-/**
- * PluginsKart Licensing API client.
- *
- * @package PluginsKart\LicenseManager
- */
 
 namespace PluginsKart\LicenseManager\V1\Licensing;
 
 use PluginsKart\LicenseManager\V1\PackageConfig;
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+    exit;
 }
 
-if ( ! class_exists( __NAMESPACE__ . '\\API' ) ) {
+if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
-	/**
-	 * HTTP client for the PluginsKart licensing/update API.
-	 */
-	class API {
+    class API {
 
-		const REQUEST_TIMEOUT = 15;
+        const REQUEST_TIMEOUT = 15;
 
 		/**
-		 * Package configuration.
+		 * Plugin package configuration.
 		 *
 		 * @var PackageConfig
 		 */
 		private $config;
 
 		/**
-		 * API paths.
-		 *
-		 * @var array
-		 */
-		private $paths = array(
-			'activate'   => 'license/activate',
-			'deactivate' => 'license/deactivate',
-			'validate'   => 'license/validate',
-			'update'     => 'update',
-		);
-
-		/**
 		 * Constructor.
 		 *
-		 * @param PackageConfig $config Package configuration.
+		 * @param PackageConfig $config Plugin package configuration.
 		 */
 		public function __construct( PackageConfig $config ) {
 			$this->config = $config;
 		}
 
-		/**
-		 * Send a request to the PluginsKart API.
-		 *
-		 * @param string $action API action.
-		 * @param array  $data   Request data.
-		 * @param string $method HTTP method.
-		 * @return array|\WP_Error
-		 */
-		public function request( $action, array $data = array(), $method = 'POST' ) {
-			$path = $this->path( $action );
+        private $paths = [
+            'activate'   => 'license/activate',
+            'deactivate' => 'license/deactivate',
+            'validate'   => 'license/validate',
+            'update'     => 'update',
+        ];
 
-			if ( ! $path ) {
-				return new \WP_Error(
-					'pluginskart_invalid_action',
-					__( 'The licensing action is invalid.', $this->text_domain() )
-				);
-			}
+        /**
+         * Send a request to the PluginsKart licensing API.
+         */
+        public function request( $action, array $data = [], $method = 'POST' ) {
+            $path = $this->path( $action );
 
-			$api_base_url = $this->config->api_base_url();
+            if ( ! $path ) {
+                return new \WP_Error(
+                    'pluginskart_invalid_action',
+                    __( 'The licensing action is invalid.', $this->text_domain() )
+                );
+            }
 
-			if ( ! $api_base_url || ! wp_http_validate_url( $api_base_url ) ) {
-				return new \WP_Error(
-					'pluginskart_invalid_api_url',
-					__( 'The licensing API URL is invalid.', $this->text_domain() )
-				);
-			}
+            $method = strtoupper( $method );
+            $api_base_url = $this->config->api_base_url();
+            $url          = trailingslashit( $api_base_url ) . ltrim( $path, '/' );
+            $args   = [
+                'method'  => $method,
+                'timeout' => self::REQUEST_TIMEOUT,
 
-			$method = strtoupper( $method );
-			$url    = trailingslashit( $api_base_url ) . ltrim( $path, '/' );
-
-			$args = array(
-				'method'      => $method,
-				'timeout'     => self::REQUEST_TIMEOUT,
-				'redirection' => 3,
 				'sslverify'   => (bool) apply_filters(
 					'pluginskart_license_api_sslverify',
-					! $this->is_local_api_url( $api_base_url ),
-					$api_base_url
+					! $this->is_local_api_url( $url ),
+					$url
 				),
-				'headers'     => array(
-					'Accept'       => 'application/json',
-					'Content-Type' => 'application/json',
-				),
-				'user-agent'  => 'PluginsKart License SDK/' . $this->config->version(),
-			);
 
-			$data = $this->sanitize_data( $data );
+                'headers' => [
+                    'Accept'       => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+            ];
 
-			if ( 'GET' === $method ) {
-				$url = add_query_arg( $data, $url );
-			} else {
-				$args['body'] = wp_json_encode( $data );
+            $data = $this->sanitize_data( $data );
 
-				if ( false === $args['body'] ) {
-					return new \WP_Error(
-						'pluginskart_request_encode_failed',
-						__( 'The licensing request could not be encoded.', $this->text_domain() )
-					);
-				}
-			}
+            if ( 'GET' === $method ) {
+                $url = add_query_arg( $data, $url );
+            } else {
+                $args['body'] = wp_json_encode( $data );
 
-			$response = wp_remote_request( $url, $args );
+                if ( false === $args['body'] ) {
+                    return new \WP_Error(
+                        'pluginskart_request_encode_failed',
+                        __( 'The licensing request could not be encoded.', $this->text_domain() )
+                    );
+                }
+            }
 
-			if ( is_wp_error( $response ) ) {
-				return new \WP_Error(
-					'pluginskart_http_error',
-					$response->get_error_message(),
-					array( 'previous_error' => $response )
-				);
-			}
+            $response = wp_remote_request( $url, $args );
 
-			$status = (int) wp_remote_retrieve_response_code( $response );
-			$body   = json_decode( wp_remote_retrieve_body( $response ), true );
+            if ( is_wp_error( $response ) ) {
+                return $response;
+            }
 
-			if ( ! is_array( $body ) ) {
-				return new \WP_Error(
-					'pluginskart_invalid_response',
-					__( 'The licensing API returned an invalid response.', $this->text_domain() ),
-					array( 'status' => $status )
-				);
-			}
+            $status = wp_remote_retrieve_response_code( $response );
+            $body   = json_decode( wp_remote_retrieve_body( $response ), true );
 
-			$body['_http_status'] = $status;
+            if ( ! is_array( $body ) ) {
+                return new \WP_Error(
+                    'pluginskart_invalid_response',
+                    __( 'The licensing API returned an invalid response.', $this->text_domain() ),
+                    [ 'status' => $status ]
+                );
+            }
 
-			return $body;
-		}
+            $body['_http_status'] = $status;
 
-		/**
-		 * Return one value from pluginskart-data.
-		 *
-		 * Kept as a compatibility helper for existing integrations. New code
-		 * should use PackageConfig directly.
-		 *
-		 * @param string $key     Metadata key.
-		 * @param mixed  $default Default value.
-		 * @return mixed
-		 */
-		public function package_value( $key, $default = '' ) {
-			return $this->config->get( $key, $default );
-		}
+            return $body;
+        }
 
-		/**
-		 * Return the complete package configuration.
-		 *
-		 * Kept for backwards compatibility with the existing plugin.
-		 *
-		 * @return array
-		 */
-		public function package_config() {
-			return $this->config->all();
-		}
+        /**
+         * Map an action to its API route and HTTP method.
+         */
+        private function path( $action ) {
+            return $this->paths[ $action ] ?? '';
+        }
 
-		/**
-		 * Map an action to an API path.
-		 *
-		 * @param string $action Action.
-		 * @return string
-		 */
-		private function path( $action ) {
-			return isset( $this->paths[ $action ] ) ? $this->paths[ $action ] : '';
-		}
+        /**
+         * Sanitize scalar API values and reject arrays or objects.
+         */
+        private function sanitize_data( array $data ) {
+            $sanitized = [];
+
+            foreach ( $data as $key => $value ) {
+                if ( ! is_scalar( $value ) ) {
+                    continue;
+                }
+
+                $key = sanitize_key( $key );
+
+                if ( '' === $key ) {
+                    continue;
+                }
+
+                $sanitized[ $key ] = sanitize_text_field( (string) $value );
+            }
+
+            return $sanitized;
+        }
 
 		/**
-		 * Identify local development API hosts.
+		 * Check whether API URL belongs to local development.
+		 *
+		 * SSL verification is disabled for local development only.
 		 *
 		 * @param string $url API URL.
+		 *
 		 * @return bool
 		 */
 		private function is_local_api_url( $url ) {
-			$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
 
-			return 'localhost' === $host
-				|| '127.0.0.1' === $host
-				|| '::1' === $host
-				|| (bool) preg_match( '/\.local$/', $host );
-		}
+			$host = strtolower(
+				(string) wp_parse_url( $url, PHP_URL_HOST )
+			);
 
-		/**
-		 * Sanitize request data without damaging URLs.
-		 *
-		 * @param array $data Request data.
-		 * @return array
-		 */
-		private function sanitize_data( array $data ) {
-			$sanitized = array();
-
-			foreach ( $data as $key => $value ) {
-				if ( ! is_scalar( $value ) ) {
-					continue;
-				}
-
-				$key = sanitize_key( $key );
-
-				if ( '' === $key ) {
-					continue;
-				}
-
-				$value = (string) $value;
-
-				if ( in_array( $key, array( 'domain', 'api_base_url', 'download_url' ), true ) ) {
-					$sanitized[ $key ] = esc_url_raw( $value );
-				} elseif ( 'license_key' === $key ) {
-					$sanitized[ $key ] = sanitize_text_field( $value );
-				} else {
-					$sanitized[ $key ] = sanitize_text_field( $value );
-				}
+			if ( in_array(
+				$host,
+				array(
+					'localhost',
+					'127.0.0.1',
+					'::1',
+				),
+				true
+			) ) {
+				return true;
 			}
 
-			return $sanitized;
+			return (bool) preg_match( '/\.local$/', $host );
 		}
 
 		/**
-		 * Return the plugin text domain.
+		 * Get plugin text domain.
 		 *
 		 * @return string
 		 */
 		private function text_domain() {
 			return $this->config->plugin_slug();
 		}
-	}
+
+		/**
+		 * Get package configuration value.
+		 *
+		 * Kept for backward compatibility.
+		 *
+		 * Prefer using PackageConfig directly in new code.
+		 *
+		 * @param string $key     Configuration key.
+		 * @param mixed  $default Default value.
+		 *
+		 * @return mixed
+		 */
+		public function package_value( $key, $default = '' ) {
+			return $this->config->get( $key, $default );
+		}
+
+    }
 }

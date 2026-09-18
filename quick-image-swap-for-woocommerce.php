@@ -22,23 +22,26 @@ define( 'PKART_QUICK_IMAGE_SWAP_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-package-config.php';
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-api.php';
-require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-admin.php';
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-licensing.php';
+require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
 
 /**
- * Initialize the reusable PluginsKart Licensing SDK.
+ * Return the plugin licensing facade.
  */
 function pkart_quick_image_swap_licensing() {
-	static $licensing = null;
+	static $licensing;
 
-	if ( null === $licensing ) {
-		$licensing = \PluginsKart\LicenseManager\V1\Licensing::init( __FILE__ );
+	if ( ! $licensing ) {
+		$config = new \PluginsKart\LicenseManager\V1\PackageConfig( __FILE__ );
+		$licensing = new \PluginsKart\LicenseManager\V1\Licensing( $config );
 	}
 
 	return $licensing;
 }
 
-pkart_quick_image_swap_licensing();
+if ( is_admin() ) {
+	new \PluginsKart\QuickImageSwap\Admin( pkart_quick_image_swap_licensing() );
+}
 
 
 /**
@@ -69,10 +72,6 @@ add_action( 'wp_enqueue_scripts', 'pkart_product_image_swap_enqueue_styles' );
  * @return string
  */
 function pkart_product_image_append_gallery( $block_content, $block, $block_instance ) {
-
-	if ( ! pkart_quick_image_swap_licensing()->is_active() ) {
-		return $block_content;
-	}
 
 	// Only target the WooCommerce product image block.
 	if (
