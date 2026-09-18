@@ -41,7 +41,7 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
 			$this->api                  = new API( $config );
 			$this->option_key           = 'pkart_' . $config->plugin_slug() . '_license';
 
-			add_action( 'admin_post_pkart_quick_image_swap_license', [ $this, 'handle_license_action' ] );
+			add_action( 'admin_post_' . $this->admin_action(), [ $this, 'handle_license_action' ] );
 		}
 
         /**
@@ -318,6 +318,15 @@ if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
                 30
             );
         }
+
+		/**
+		 * Return the generated admin action.
+		 *
+		 * @return string
+		 */
+		public function admin_action() {
+			return 'pkart_' . $this->config->plugin_slug() . '_license';
+		}
 
 
     }
