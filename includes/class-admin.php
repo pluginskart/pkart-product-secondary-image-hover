@@ -104,7 +104,6 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                 </table>
                 <p class="submit">
                     <button class="button button-primary" type="submit" name="license_action" value="activate"><?php esc_html_e( 'Activate License', $this->api->package_value( 'product_sku' ) ); ?></button>
-                    <button class="button" type="submit" name="license_action" value="validate"><?php esc_html_e( 'Validate License', $this->api->package_value( 'product_sku' ) ); ?></button>
                     <button class="button" type="submit" name="license_action" value="deactivate"><?php esc_html_e( 'Deactivate License', $this->api->package_value( 'product_sku' ) ); ?></button>
                 </p>
             </form>
