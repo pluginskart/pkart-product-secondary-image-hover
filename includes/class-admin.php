@@ -103,8 +103,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
                     </tr>
                 </table>
                 <p class="submit">
-                    <button class="button button-primary" type="submit" name="license_action" value="activate"><?php esc_html_e( 'Activate License', $this->api->package_value( 'product_sku' ) ); ?></button>
-                    <button class="button" type="submit" name="license_action" value="deactivate"><?php esc_html_e( 'Deactivate License', $this->api->package_value( 'product_sku' ) ); ?></button>
+                    <?php if ( $this->licensing->is_active() ) : ?>
+                        <button class="button" type="submit" name="license_action" value="deactivate">
+                            <?php esc_html_e( 'Deactivate License', $this->api->package_value( 'product_sku' ) ); ?>
+                        </button>
+                    <?php else : ?>
+                        <button class="button button-primary" type="submit" name="license_action" value="activate">
+                            <?php esc_html_e( 'Activate License', $this->api->package_value( 'product_sku' ) ); ?>
+                        </button>
+                    <?php endif; ?>
                 </p>
             </form>
             <?php
