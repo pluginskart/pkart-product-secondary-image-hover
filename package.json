@@ -4,7 +4,6 @@
 	"description": "Quick Image Swap for WooCommerce",
 	"author": "PluginsKart",
 	"pluginskart-data": {
-		"api_base_url": "https://pluginskartplugins.local/wp-json/pluginskart-sdk/v1/",
 		"product_sku": "quick-image-swap-for-woocommerce",
 		"title": "Quick Image Swap for WooCommerce",
 		"author": "PluginsKart",
