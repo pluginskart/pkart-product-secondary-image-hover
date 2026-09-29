@@ -38,14 +38,14 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
         ];
 
         /**
-         * Send a request to the PluginsKart licensing API.
+		 * Send a request to the Pkart licensing API.
          */
         public function request( $action, array $data = [], $method = 'POST' ) {
             $path = $this->path( $action );
 
             if ( ! $path ) {
                 return new \WP_Error(
-                    'pluginskart_invalid_action',
+                    'pkart_invalid_action',
                     __( 'The licensing action is invalid.', $this->config->package_value( 'product_sku' ) )
                 );
             }
@@ -58,7 +58,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
                 'timeout' => self::REQUEST_TIMEOUT,
 
 				'sslverify'   => (bool) apply_filters(
-					'pluginskart_license_api_sslverify',
+					'pkart_license_api_sslverify',
 					! $this->is_local_api_url( $url ),
 					$url
 				),
@@ -78,7 +78,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
                 if ( false === $args['body'] ) {
                     return new \WP_Error(
-                        'pluginskart_request_encode_failed',
+                        'pkart_request_encode_failed',
                         __( 'The licensing request could not be encoded.', $this->config->package_value( 'product_sku' ) )
                     );
                 }
@@ -95,7 +95,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
             if ( ! is_array( $body ) ) {
                 return new \WP_Error(
-                    'pluginskart_invalid_response',
+                    'pkart_invalid_response',
                     __( 'The licensing API returned an invalid response.', $this->config->package_value( 'product_sku' ) ),
                     [ 'status' => $status ]
                 );

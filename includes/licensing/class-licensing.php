@@ -199,7 +199,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
          */
         private function missing_license_error() {
             return new \WP_Error(
-                'pluginskart_license_missing',
+                'pkart_license_missing',
                 __( 'No license is activated.', $this->api->package_value( 'product_sku' ) )
             );
         }
@@ -294,7 +294,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
                 default:
                     return new \WP_Error(
-                        'pluginskart_invalid_license_action',
+                        'pkart_invalid_license_action',
                         __( 'Invalid license action.', $this->api->package_value( 'product_sku' ) )
                     );
             }

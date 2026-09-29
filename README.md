@@ -53,7 +53,7 @@ $update = $licensing->update(
 );
 ```
 
-Switch the API base URL with the `pluginskart_quick_image_swap_license_api_url`
+Switch the API base URL with the `pkart_quick_image_swap_license_api_url`
 filter when connecting to the production API. The mock API key
 `PKMOCK-2026-TEST-0001` activates the local development flow.
 

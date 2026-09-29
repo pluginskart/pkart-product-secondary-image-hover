@@ -1,9 +1,9 @@
 <?php
 
-namespace PluginsKart\QuickImageSwap;
+namespace Pkart\QuickImageSwap;
 
-use PluginsKart\LicenseManager\V1\Licensing;
-use PluginsKart\LicenseManager\V1\Licensing\API;
+use Pkart\LicenseManager\V1\Licensing;
+use Pkart\LicenseManager\V1\Licensing\API;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
