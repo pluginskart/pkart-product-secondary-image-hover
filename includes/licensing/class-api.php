@@ -31,10 +31,12 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		}
 
         private $paths = [
-            'activate'   => 'license/activate',
-            'deactivate' => 'license/deactivate',
-            'validate'   => 'license/validate',
-            'update'     => 'update',
+            'activate'            => 'license/activate',
+            'deactivate'          => 'license/deactivate',
+            'validate'            => 'license/validate',
+			'plugin_activation'   => 'plugin/activation',
+			'plugin_deactivation' => 'plugin/deactivation',
+            'plugin_update'       => 'plugin/update',
         ];
 
         /**
@@ -51,18 +53,11 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             }
 
             $method = strtoupper( $method );
-            $api_base_url = $this->config->api_base_url();
+            $api_base_url = 'http://pluginskartplugins.local/wp-json/pluginskart-sdk/v1/';
             $url          = trailingslashit( $api_base_url ) . ltrim( $path, '/' );
             $args   = [
                 'method'  => $method,
                 'timeout' => self::REQUEST_TIMEOUT,
-
-				'sslverify'   => (bool) apply_filters(
-					'pkart_license_api_sslverify',
-					! $this->is_local_api_url( $url ),
-					$url
-				),
-
                 'headers' => [
                     'Accept'       => 'application/json',
                     'Content-Type' => 'application/json',
@@ -74,7 +69,10 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( 'GET' === $method ) {
                 $url = add_query_arg( $data, $url );
             } else {
-                $args['body'] = wp_json_encode( $data );
+				$body_data = in_array( $action, [ 'plugin_activation', 'plugin_deactivation' ], true )
+					? [ 'data' => $data ]
+					: $data;
+				$args['body'] = wp_json_encode( $body_data );
 
                 if ( false === $args['body'] ) {
                     return new \WP_Error(
@@ -105,6 +103,25 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
             return $body;
         }
+
+		/**
+		 * Send a plugin activation or deactivation event to the Pkart licensing API.
+		 *
+		 * @param string $action Either 'activate' or 'deactivate'.
+		 * @param array  $data   Data to send with the event.
+		 *
+		 * @return array|\WP_Error
+		 */
+		public function send_plugin_event( $action, $data ) {
+			if ( ! in_array( $action, [ 'activate', 'deactivate' ], true ) ) {
+				return new \WP_Error(
+					'pkart_invalid_action',
+					__( 'The plugin lifecycle action is invalid.', $this->config->package_value( 'product_sku' ) )
+				);
+			}
+
+			return $this->request( 'plugin_' . ( 'activate' === $action ? 'activation' : 'deactivation' ), $data );
+		}
 
         /**
          * Map an action to its API route and HTTP method.

@@ -23,7 +23,6 @@ define( 'PKART_QUICK_IMAGE_SWAP_DIR', plugin_dir_path( __FILE__ ) );
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-package-config.php';
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-api.php';
 require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-licensing.php';
-require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
 
 /**
  * Return the plugin licensing facade.
@@ -33,16 +32,36 @@ function pkart_quick_image_swap_licensing() {
 	static $admin     = null;
 
 	if ( null === $licensing ) {
-		$config = new \PluginsKart\LicenseManager\V1\PackageConfig( __FILE__ );
-		$licensing = new \PluginsKart\LicenseManager\V1\Licensing( $config );
+		$config = new \Pkart\LicenseManager\V1\PackageConfig( __FILE__ );
+		$licensing = new \Pkart\LicenseManager\V1\Licensing( $config );
 
 		if ( is_admin() ) {
-			$admin = new \PluginsKart\QuickImageSwap\Admin( $licensing );
+			if ( ! class_exists( \Pkart\QuickImageSwap\Admin::class ) ) {
+				require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
+			}
+
+			$admin = new \Pkart\QuickImageSwap\Admin( $licensing );
 		}
 	}
 
 	return $licensing;
 }
+
+register_activation_hook(
+    __FILE__,
+    function () {
+		$licensing = pkart_quick_image_swap_licensing();
+        $licensing->register_plugin_event( 'activate' );
+    }
+);
+
+register_deactivation_hook(
+    __FILE__,
+    function () {
+		$licensing = pkart_quick_image_swap_licensing();
+        $licensing->register_plugin_event( 'deactivate' );
+    }
+);
 
 if ( is_admin() ) {
 	pkart_quick_image_swap_licensing();

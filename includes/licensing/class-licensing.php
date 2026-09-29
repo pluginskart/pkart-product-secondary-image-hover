@@ -44,6 +44,32 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			add_action( 'admin_post_pkart_quick_image_swap_license', [ $this, 'handle_license_action' ] );
 		}
 
+		/**
+		 * Register a plugin lifecycle event.
+		 *
+		 * @param string $action Lifecycle action.
+		 * @return array|\WP_Error
+		 */
+		public function register_plugin_event( $action ) {
+
+			$license = get_option( 'pkart_' . $this->config->plugin_slug() . '_license', [] );
+
+			$data = [
+				'license_key' => sanitize_text_field( $license['license_key'] ?? '' ),
+				'product_sku' => $this->config->product_sku(),
+				'plugin_name' => $this->config->title(),
+				'site_url'    => esc_url_raw( home_url() ),
+				'version'     => $this->config->version(),
+				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
+				'action'      => $action,
+			];
+
+			return $this->api->send_plugin_event(
+				$action,
+				$data
+			);
+		}
+
         /**
          * Activate a license.
          */
