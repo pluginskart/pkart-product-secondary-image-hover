@@ -194,9 +194,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return string
 		 */
 		public function api_base_url() {
-			$url = esc_url_raw( $this->string( 'api_base_url', '' ) );
-
-			return $url;
+			return $this->string( 'api_base_url', 'http://pluginskartplugins.local/wp-json/pluginskart-sdk/v1/' );
 		}
 
 		/**

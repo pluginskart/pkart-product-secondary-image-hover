@@ -48,14 +48,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( ! $path ) {
                 return new \WP_Error(
                     'pkart_invalid_action',
-                    __( 'The licensing action is invalid.', $this->config->package_value( 'product_sku' ) )
+					__( 'The licensing action is invalid.', $this->config->product_sku() )
                 );
             }
 
-            $method = strtoupper( $method );
-            $api_base_url = 'http://pluginskartplugins.local/wp-json/pluginskart-sdk/v1/';
-            $url          = trailingslashit( $api_base_url ) . ltrim( $path, '/' );
-            $args   = [
+            $method  = strtoupper( $method );
+			$url     = trailingslashit( $this->config->api_base_url() ) . ltrim( $path, '/' );
+            $args    = [
                 'method'  => $method,
                 'timeout' => self::REQUEST_TIMEOUT,
                 'headers' => [
@@ -77,7 +76,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
                 if ( false === $args['body'] ) {
                     return new \WP_Error(
                         'pkart_request_encode_failed',
-                        __( 'The licensing request could not be encoded.', $this->config->package_value( 'product_sku' ) )
+						__( 'The licensing request could not be encoded.', $this->config->product_sku() )
                     );
                 }
             }
@@ -94,7 +93,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
             if ( ! is_array( $body ) ) {
                 return new \WP_Error(
                     'pkart_invalid_response',
-                    __( 'The licensing API returned an invalid response.', $this->config->package_value( 'product_sku' ) ),
+					__( 'The licensing API returned an invalid response.', $this->config->product_sku() ),
                     [ 'status' => $status ]
                 );
             }
@@ -116,7 +115,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			if ( ! in_array( $action, [ 'activate', 'deactivate' ], true ) ) {
 				return new \WP_Error(
 					'pkart_invalid_action',
-					__( 'The plugin lifecycle action is invalid.', $this->config->package_value( 'product_sku' ) )
+					__( 'The plugin lifecycle action is invalid.', $this->config->product_sku() )
 				);
 			}
 
