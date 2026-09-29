@@ -1,14 +1,14 @@
 <?php
 
-namespace PluginsKart\LicenseManager\V1;
+namespace Pkart\LicenseManager\V1;
 
-use PluginsKart\LicenseManager\V1\Licensing\API;
+use Pkart\LicenseManager\V1\Licensing\API;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if ( ! class_exists( 'PluginsKart\\LicenseManager\\V1\\Licensing' ) ) {
+if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
     class Licensing {
 

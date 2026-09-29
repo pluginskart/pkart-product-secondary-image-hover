@@ -1,11 +1,11 @@
 <?php
 /**
- * PluginsKart package configuration.
+ * Pkart package configuration.
  *
- * @package PluginsKart\LicenseManager
+ * @package Pkart\LicenseManager
  */
 
-namespace PluginsKart\LicenseManager\V1;
+namespace Pkart\LicenseManager\V1;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -99,20 +99,20 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		}
 
 		/**
-		 * Return the PluginsKart metadata section.
+		 * Return the Pkart metadata section.
 		 *
 		 * @return array
 		 */
 		public function data() {
-			$data = isset( $this->config['pluginskart-data'] )
-				? $this->config['pluginskart-data']
+			$data = isset( $this->config['pkart-data'] )
+				? $this->config['pkart-data']
 				: array();
 
 			return is_array( $data ) ? $data : array();
 		}
 
 		/**
-		 * Return one value from pluginskart-data.
+		 * Return one value from pkart-data.
 		 *
 		 * @param string $key     Metadata key.
 		 * @param mixed  $default Default value.
@@ -252,7 +252,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return bool
 		 */
 		public function is_valid() {
-			return ! empty( $this->config['pluginskart-data'] )
+			return ! empty( $this->config['pkart-data'] )
 				&& is_array( $this->data() )
 				&& '' !== $this->plugin_slug();
 		}
