@@ -250,7 +250,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				[
 					'license_key' => $license_key,
 					'product_sku' => $this->config->product_sku(),
-					'domain'      => esc_url_raw( home_url() ),
+					'site_url'    => esc_url_raw( home_url() ),
 					'response'    => $response,
 					'updated_at'  => time(),
 				],
@@ -268,8 +268,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				[
 					'license_key'    => $license_key,
 					'product_sku'    => $this->config->product_sku(),
-					'domain'         => home_url(),
-					'plugin_version' => $this->config->version(),
+					'site_url'       => home_url(),
+					'version'        => $this->config->version(),
 				]
 			);
 		}

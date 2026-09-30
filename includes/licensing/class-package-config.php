@@ -194,7 +194,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return string
 		 */
 		public function api_base_url() {
-			return $this->string( 'api_base_url', 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/' );
+			return $this->string( 'api_base_url', 'https://wordpress.local/wp-json/pkart-sdk/v1/' );
 		}
 
 		/**
