@@ -50,25 +50,27 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private static $instances = [];
 
 		/**
-		 * Boot licensing for a plugin. Call once from the main plugin file:
+		 * Boot licensing for a plugin:
 		 *
 		 *   \Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
 		 *
-		 * Loads package.json, registers the activate/deactivate lifecycle
-		 * events, and returns the plugin's instance. Calling it again with the
-		 * same file returns the same instance.
+		 * Pass any file inside the plugin (e.g. load.php). The main plugin
+		 * file is found from package.json, so activate/deactivate hooks are
+		 * registered on the right file. Returns the same instance per plugin.
 		 *
-		 * @param string $plugin_file Main plugin file (__FILE__).
+		 * @param string $file Any file inside the plugin.
 		 * @return Licensing
 		 */
-		public static function init( $plugin_file ) {
-			$key = plugin_basename( $plugin_file );
+		public static function init( $file ) {
+			$config      = new PackageConfig( $file );
+			$plugin_file = WP_PLUGIN_DIR . '/' . $config->plugin_slug();
+			$key         = $config->plugin_slug();
 
 			if ( isset( self::$instances[ $key ] ) ) {
 				return self::$instances[ $key ];
 			}
 
-			$instance = new self( new PackageConfig( $plugin_file ) );
+			$instance = new self( $config );
 
 			register_activation_hook(
 				$plugin_file,
@@ -83,6 +85,10 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 					$instance->register_plugin_event( 'deactivate' );
 				}
 			);
+
+			if ( is_admin() ) {
+				new Licensing\Admin( $instance );
+			}
 
 			return self::$instances[ $key ] = $instance;
 		}

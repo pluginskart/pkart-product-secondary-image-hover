@@ -18,25 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PKART_QUICK_IMAGE_SWAP_DIR', plugin_dir_path( __FILE__ ) );
-
-require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-package-config.php';
-require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-api.php';
-require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/licensing/class-licensing.php';
-
 /**
- * Initialize the Pkart licensing API for this plugin.
- * @return \Pkart\LicenseManager\V1\Licensing
+ * Licensing: Load the Pkart licensing SDK.
  */
-$pkart_quick_image_swap_licensing = \Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
-
-/**
- * Initialize the admin settings page for this plugin.
- */
-if ( is_admin() ) {
-	require_once PKART_QUICK_IMAGE_SWAP_DIR . 'includes/class-admin.php';
-	new \Pkart\QuickImageSwap\Admin( $pkart_quick_image_swap_licensing );
-}
+require_once __DIR__ . '/includes/licensing/load.php';
 
 
 /**
