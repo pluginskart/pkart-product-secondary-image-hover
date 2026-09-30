@@ -67,11 +67,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
             ];
             $args     = wp_parse_args( $args, $defaults );
             $license  = $this->licensing->get_stored();
-            $notice   = get_transient( 'pkart_quick_image_swap_license_notice_' . get_current_user_id() );
-
-            if ( $notice ) {
-                delete_transient( 'pkart_quick_image_swap_license_notice_' . get_current_user_id() );
-            }
+            $notice   = $this->licensing->pop_notice();
             ?>
             <h1><?php echo esc_html( $args['title'] ); ?></h1>
 
@@ -84,8 +80,8 @@ if ( ! class_exists( __NAMESPACE__ . '\\Admin' ) ) {
             <p><?php echo esc_html( $args['description'] ); ?></p>
 
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-                <?php wp_nonce_field( 'pkart_quick_image_swap_license' ); ?>
-                <input type="hidden" name="action" value="pkart_quick_image_swap_license">
+                <?php wp_nonce_field( $this->licensing->admin_action() ); ?>
+                <input type="hidden" name="action" value="<?php echo esc_attr( $this->licensing->admin_action() ); ?>">
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', $this->api->package_value( 'product_sku' ) ); ?></label></th>

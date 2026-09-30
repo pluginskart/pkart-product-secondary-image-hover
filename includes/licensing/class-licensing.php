@@ -5,12 +5,21 @@ namespace Pkart\LicenseManager\V1;
 use Pkart\LicenseManager\V1\Licensing\API;
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
 if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
-    class Licensing {
+	/**
+	 * License facade for one plugin: activate, validate, deactivate, update,
+	 * plugin lifecycle events, and the admin-post form handler.
+	 *
+	 * Stored option (pkart_{slug}_license):
+	 *   [ license_key, product_sku, domain, response, updated_at ]
+	 *
+	 * Pro features are enabled only when response.status === 'active'.
+	 */
+	class Licensing {
 
 		/**
 		 * API client.
@@ -20,6 +29,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private $api;
 
 		/**
+		 * Package configuration.
+		 *
+		 * @var PackageConfig
+		 */
+		private $config;
+
+		/**
 		 * Option key for storing license state.
 		 *
 		 * @var string
@@ -27,334 +43,292 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private $option_key;
 
 		/**
-		 * Package configuration.
-		 *
-		 * @var PackageConfig
+		 * Create the licensing facade.
 		 */
-		private $config;
-
-        /**
-         * Create the licensing facade for a plugin slug.
-         */
 		public function __construct( PackageConfig $config ) {
-			$this->config               = $config;
-			$this->api                  = new API( $config );
-			$this->option_key           = 'pkart_' . $config->plugin_slug() . '_license';
+			$this->config     = $config;
+			$this->api        = new API( $config );
+			$this->option_key = 'pkart_' . $config->plugin_slug() . '_license';
 
-			add_action( 'admin_post_pkart_quick_image_swap_license', [ $this, 'handle_license_action' ] );
+			add_action( 'admin_post_' . $this->admin_action(), [ $this, 'handle_license_action' ] );
 		}
 
+		/*
+		 * ------------------------------------------------------------------
+		 * API actions
+		 * ------------------------------------------------------------------
+		 */
+
 		/**
-		 * Register a plugin lifecycle event.
+		 * Send a plugin activate/deactivate lifecycle event.
 		 *
-		 * @param string $action Lifecycle action.
+		 * @param string $action 'activate' or 'deactivate'.
 		 * @return array|\WP_Error
 		 */
 		public function register_plugin_event( $action ) {
-
-			$license = get_option( 'pkart_' . $this->config->plugin_slug() . '_license', [] );
-
-			$data = [
-				'license_key' => sanitize_text_field( $license['license_key'] ?? '' ),
-				'product_sku' => $this->config->product_sku(),
-				'plugin_name' => $this->config->title(),
-				'site_url'    => esc_url_raw( home_url() ),
-				'version'     => $this->config->version(),
-				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
-				'action'      => $action,
-			];
-
-			return $this->api->send_plugin_event(
+			return $this->api->request(
+				'plugin',
 				$action,
-				$data
+				[
+					'license_key' => $this->get_stored()['license_key'] ?? '',
+					'product_sku' => $this->config->product_sku(),
+					'plugin_name' => $this->config->title(),
+					'site_url'    => esc_url_raw( home_url() ),
+					'version'     => $this->config->version(),
+					'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized by API.
+				]
 			);
 		}
 
-        /**
-         * Activate a license.
-         */
-        public function activate( $license_key, $product_sku, $domain = '', $plugin_version = '' ) {
-            return $this->license_request( 'activate', $license_key, $product_sku, $domain, $plugin_version );
-        }
-
-        /**
-         * Deactivate a license.
-         */
-        public function deactivate( $license_key, $product_sku, $domain = '' ) {
-            return $this->license_request( 'deactivate', $license_key, $product_sku, $domain );
-        }
-
-        /**
-         * Validate a license.
-         */
-        public function validate( $license_key, $product_sku, $domain = '', $plugin_version = '' ) {
-            return $this->license_request( 'validate', $license_key, $product_sku, $domain, $plugin_version );
-        }
-
-        /**
-         * Check for a plugin update.
-         */
-        public function update( $license_key, $product_sku, $plugin_version ) {
-            return $this->api->request(
-                'plugin_update',
-                [
-                    'license_key'    => $license_key,
-                    'product_sku'    => $product_sku,
-                    'plugin_version' => $plugin_version,
-                ]
-            );
-        }
-
-        /**
-         * Activate and persist a license response.
-         */
-        public function activate_for_site( $license_key, $product_sku, $domain, $plugin_version ) {
-            $response = $this->activate( $license_key, $product_sku, $domain, $plugin_version );
-
-            if ( is_wp_error( $response ) || empty( $response['success'] ) ) {
-                return $response;
-            }
-
-            update_option(
-                $this->option_key,
-                [
-                    'license_key' => sanitize_text_field( $license_key ),
-                    'product_sku' => sanitize_text_field( $product_sku ),
-                    'domain'      => esc_url_raw( $domain ),
-                    'response'    => $response,
-                    'updated_at'  => time(),
-                ],
-                false
-            );
-
-            return $response;
-        }
-
-        /**
-         * Validate the stored license against the API.
-         */
-        public function validate_stored() {
-            $license = $this->get_stored();
-
-            if ( ! $this->has_stored_license( $license ) ) {
-                return $this->missing_license_error();
-            }
-
-            $response = $this->validate(
-                $license['license_key'],
-                $license['product_sku'],
-                $license['domain'] ?? home_url(),
-                $this->api->package_value( 'version' )
-            );
-
-            // Store the latest status so an expired/suspended key turns Pro off.
-            if ( ! is_wp_error( $response ) && isset( $response['status'] ) ) {
-                $license['response']   = $response;
-                $license['updated_at'] = time();
-                update_option( $this->option_key, $license, false );
-            }
-
-            return $response;
-        }
-
-        /**
-         * Deactivate the stored license and clear local state on success.
-         */
-        public function deactivate_stored() {
-            $license = $this->get_stored();
-
-            if ( ! $this->has_stored_license( $license ) ) {
-                $this->clear_stored_license();
-                return [ 'success' => true ];
-            }
-
-            $response = $this->deactivate(
-                $license['license_key'],
-                $license['product_sku'],
-                $license['domain'] ?? home_url()
-            );
-
-            if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
-                $this->clear_stored_license();
-            }
-
-            return $response;
-        }
-
-        /**
-         * Return the locally stored license state.
-         */
-        public function get_stored() {
-            $license = get_option( $this->option_key, [] );
-
-            return is_array( $license ) ? $license : [];
-        }
-
-        /**
-         * Check whether the stored license is active (Pro features enabled).
-         */
-        public function is_active() {
-            $license = $this->get_stored();
-
-            return 'active' === ( $license['response']['status'] ?? '' );
-        }
-
-        /**
-         * Send a license action request.
-         */
-        private function license_request( $action, $license_key, $product_sku, $domain, $plugin_version = '' ) {
-            return $this->api->request(
-                $action,
-                $this->request_data( $license_key, $product_sku, $domain, $plugin_version )
-            );
-        }
-
-        /**
-         * Build the common license request payload.
-         */
-        private function request_data( $license_key, $product_sku, $domain, $plugin_version = '' ) {
-            return [
-                'license_key'    => $license_key,
-                'product_sku'    => $product_sku,
-                'domain'         => $domain ?: home_url(),
-                'plugin_version' => $plugin_version,
-            ];
-        }
-
-        /**
-         * Check whether stored license data is complete enough to use.
-         */
-        private function has_stored_license( array $license ) {
-            return ! empty( $license['license_key'] ) && ! empty( $license['product_sku'] );
-        }
-
-        /**
-         * Return the standard missing-license error.
-         */
-        private function missing_license_error() {
-            return new \WP_Error(
-                'pkart_license_missing',
-                __( 'No license is activated.', $this->api->package_value( 'product_sku' ) )
-            );
-        }
-
-        /**
-         * Remove the stored license state.
-         */
-        private function clear_stored_license() {
-            delete_option( $this->option_key );
-        }
-
 		/**
-		 * Return package metadata.
+		 * Activate a license key for this site and store the result.
 		 *
-		 * @return PackageConfig
+		 * @param string $license_key License key.
+		 * @return array|\WP_Error
 		 */
-		public function package_config() {
-			return $this->config;
+		public function activate( $license_key ) {
+			$license_key = sanitize_text_field( $license_key );
+
+			if ( '' === $license_key ) {
+				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', $this->config->product_sku() ) );
+			}
+
+			$response = $this->license_request( 'activate', $license_key );
+
+			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
+				$this->store( $license_key, $response );
+			}
+
+			return $response;
 		}
 
 		/**
-		 * Return the API client.
+		 * Re-check the stored license and store the latest status, so an
+		 * expired or suspended key turns Pro off.
 		 *
-		 * @return API
+		 * @return array|\WP_Error
 		 */
-		public function api() {
-			return $this->api;
+		public function validate() {
+			$license_key = $this->stored_key();
+
+			if ( '' === $license_key ) {
+				return $this->error( 'pkart_license_missing', __( 'No license is activated.', $this->config->product_sku() ) );
+			}
+
+			$response = $this->license_request( 'validate', $license_key );
+
+			if ( ! is_wp_error( $response ) && isset( $response['status'] ) ) {
+				$this->store( $license_key, $response );
+			}
+
+			return $response;
 		}
 
 		/**
-         * Process activation, validation, and deactivation requests.
-         */
-        public function handle_license_action() {
-            if ( ! current_user_can( 'manage_options' ) ) {
-                wp_die( esc_html__( 'You are not allowed to manage this license.', $this->api->package_value( 'product_sku' ) ) );
-            }
+		 * Deactivate the stored license and clear local state on success.
+		 *
+		 * @return array|\WP_Error
+		 */
+		public function deactivate() {
+			$license_key = $this->stored_key();
 
-            check_admin_referer( 'pkart_quick_image_swap_license' );
+			if ( '' === $license_key ) {
+				delete_option( $this->option_key );
+				return [ 'success' => true ];
+			}
 
-            $response = $this->process_license_action(
-                $this->request_action(),
-                $this->request_license_key()
-            );
-            $this->store_license_notice( $response );
+			$response = $this->license_request( 'deactivate', $license_key );
 
-            wp_safe_redirect( admin_url( 'options-general.php?page=pkart-quick-image-swap-license' ) );
-            exit;
-        }
+			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
+				delete_option( $this->option_key );
+			}
 
-        /**
-         * Return the requested admin license action.
-         */
-        private function request_action() {
-            return isset( $_POST['license_action'] )
-                ? sanitize_key( wp_unslash( $_POST['license_action'] ) )
-                : '';
-        }
+			return $response;
+		}
 
 		/**
-         * Return the submitted license key.
-         */
-        private function request_license_key() {
-            return isset( $_POST['license_key'] )
-                ? sanitize_text_field( wp_unslash( $_POST['license_key'] ) )
-                : '';
-        }
+		 * Check for a plugin update with the stored license.
+		 *
+		 * @return array|\WP_Error
+		 */
+		public function update() {
+			return $this->api->request(
+				'plugin',
+				'update',
+				[
+					'license_key'    => $this->stored_key(),
+					'product_sku'    => $this->config->product_sku(),
+					'plugin_version' => $this->config->version(),
+				]
+			);
+		}
 
-        /**
-         * Process one supported license action.
-         *
-         * This public method can also be called by another plugin integration.
-         *
-         * @param string $action     License action: activate, validate, or deactivate.
-         * @param string $license_key License key for activation.
-         * @return array|\WP_Error
-         */
-        public function process_license_action( $action, $license_key = '' ) {
-            switch ( $action ) {
-                case 'activate':
-                    return $this->activate_for_site(
-                        sanitize_text_field( $license_key ),
-                        $this->api->package_value( 'product_sku' ),
-                        home_url(),
-                        $this->api->package_value( 'version' )
-                    );
-
-                case 'validate':
-                    return $this->validate_stored();
-
-                case 'deactivate':
-                    return $this->deactivate_stored();
-
-                default:
-                    return new \WP_Error(
-                        'pkart_invalid_license_action',
-                        __( 'Invalid license action.', $this->api->package_value( 'product_sku' ) )
-                    );
-            }
-        }
-
-        /**
-         * Store a one-time admin notice for the license page.
-         */
-        private function store_license_notice( $response ) {
-            $success = ! is_wp_error( $response ) && ! empty( $response['success'] );
-            $message = is_wp_error( $response )
-                ? $response->get_error_message()
-                : ( $response['message'] ?? __( 'License request completed.', $this->api->package_value( 'product_sku' ) ) );
-
-            set_transient(
-                'pkart_quick_image_swap_license_notice_' . get_current_user_id(),
-                [
-                    'type'    => $success ? 'updated' : 'error',
-                    'message' => $message,
-                ],
-                30
-            );
-        }
+		/*
+		 * ------------------------------------------------------------------
+		 * Stored state
+		 * ------------------------------------------------------------------
+		 */
 
 		/**
-		 * Return the generated admin action.
+		 * Return the locally stored license state.
+		 *
+		 * @return array
+		 */
+		public function get_stored() {
+			$license = get_option( $this->option_key, [] );
+
+			return is_array( $license ) ? $license : [];
+		}
+
+		/**
+		 * Whether Pro features should be enabled.
+		 *
+		 * @return bool
+		 */
+		public function is_active() {
+			return 'active' === ( $this->get_stored()['response']['status'] ?? '' );
+		}
+
+		/**
+		 * Return the stored license key, or ''.
+		 */
+		private function stored_key() {
+			return (string) ( $this->get_stored()['license_key'] ?? '' );
+		}
+
+		/**
+		 * Persist a license key and its latest API response.
+		 */
+		private function store( $license_key, array $response ) {
+			update_option(
+				$this->option_key,
+				[
+					'license_key' => $license_key,
+					'product_sku' => $this->config->product_sku(),
+					'domain'      => esc_url_raw( home_url() ),
+					'response'    => $response,
+					'updated_at'  => time(),
+				],
+				false
+			);
+		}
+
+		/**
+		 * Send a license request with the common payload.
+		 */
+		private function license_request( $action, $license_key ) {
+			return $this->api->request(
+				'license',
+				$action,
+				[
+					'license_key'    => $license_key,
+					'product_sku'    => $this->config->product_sku(),
+					'domain'         => home_url(),
+					'plugin_version' => $this->config->version(),
+				]
+			);
+		}
+
+		/*
+		 * ------------------------------------------------------------------
+		 * Admin form handling
+		 * ------------------------------------------------------------------
+		 */
+
+		/**
+		 * Handle the license form submitted to admin-post.php.
+		 */
+		public function handle_license_action() {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'You are not allowed to manage this license.', $this->config->product_sku() ) );
+			}
+
+			check_admin_referer( $this->admin_action() );
+
+			$action      = sanitize_key( wp_unslash( $_POST['license_action'] ?? '' ) );
+			$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ?? '' ) );
+
+			$this->set_notice( $this->process_license_action( $action, $license_key ) );
+
+			wp_safe_redirect( wp_get_referer() ?: admin_url() );
+			exit;
+		}
+
+		/**
+		 * Run one license action. Also usable by other plugin integrations.
+		 *
+		 * @param string $action      activate, validate, or deactivate.
+		 * @param string $license_key License key (activate only).
+		 * @return array|\WP_Error
+		 */
+		public function process_license_action( $action, $license_key = '' ) {
+			switch ( $action ) {
+				case 'activate':
+					return $this->activate( $license_key );
+
+				case 'validate':
+					return $this->validate();
+
+				case 'deactivate':
+					return $this->deactivate();
+
+				default:
+					return $this->error( 'pkart_invalid_license_action', __( 'Invalid license action.', $this->config->product_sku() ) );
+			}
+		}
+
+		/**
+		 * Return and clear the one-time admin notice for the current user.
+		 *
+		 * @return array|null [ 'type' => 'updated'|'error', 'message' => string ]
+		 */
+		public function pop_notice() {
+			$key    = $this->notice_key();
+			$notice = get_transient( $key );
+
+			if ( ! $notice ) {
+				return null;
+			}
+
+			delete_transient( $key );
+
+			return $notice;
+		}
+
+		/**
+		 * Store a one-time admin notice from an API response.
+		 */
+		private function set_notice( $response ) {
+			$success = ! is_wp_error( $response ) && ! empty( $response['success'] );
+			$message = is_wp_error( $response )
+				? $response->get_error_message()
+				: ( $response['message'] ?? __( 'License request completed.', $this->config->product_sku() ) );
+
+			set_transient(
+				$this->notice_key(),
+				[
+					'type'    => $success ? 'updated' : 'error',
+					'message' => $message,
+				],
+				30
+			);
+		}
+
+		/**
+		 * Transient key for the current user's notice.
+		 */
+		private function notice_key() {
+			return $this->admin_action() . '_notice_' . get_current_user_id();
+		}
+
+		/*
+		 * ------------------------------------------------------------------
+		 * Accessors
+		 * ------------------------------------------------------------------
+		 */
+
+		/**
+		 * admin-post action and nonce name for the license form.
 		 *
 		 * @return string
 		 */
@@ -362,6 +336,25 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			return 'pkart_' . $this->config->plugin_slug() . '_license';
 		}
 
+		/**
+		 * @return PackageConfig
+		 */
+		public function package_config() {
+			return $this->config;
+		}
 
-    }
+		/**
+		 * @return API
+		 */
+		public function api() {
+			return $this->api;
+		}
+
+		/**
+		 * Build a WP_Error.
+		 */
+		private function error( $code, $message ) {
+			return new \WP_Error( $code, $message );
+		}
+	}
 }
