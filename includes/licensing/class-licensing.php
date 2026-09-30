@@ -101,8 +101,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
                     'license_key'    => $license_key,
                     'product_sku'    => $product_sku,
                     'plugin_version' => $plugin_version,
-                ],
-                'GET'
+                ]
             );
         }
 
@@ -141,12 +140,21 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
                 return $this->missing_license_error();
             }
 
-            return $this->validate(
+            $response = $this->validate(
                 $license['license_key'],
                 $license['product_sku'],
                 $license['domain'] ?? home_url(),
                 $this->api->package_value( 'version' )
             );
+
+            // Store the latest status so an expired/suspended key turns Pro off.
+            if ( ! is_wp_error( $response ) && isset( $response['status'] ) ) {
+                $license['response']   = $response;
+                $license['updated_at'] = time();
+                update_option( $this->option_key, $license, false );
+            }
+
+            return $response;
         }
 
         /**
@@ -183,12 +191,12 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
         }
 
         /**
-         * Check whether a successful license response is stored.
+         * Check whether the stored license is active (Pro features enabled).
          */
         public function is_active() {
             $license = $this->get_stored();
 
-            return ! empty( $license['response']['success'] );
+            return 'active' === ( $license['response']['status'] ?? '' );
         }
 
         /**

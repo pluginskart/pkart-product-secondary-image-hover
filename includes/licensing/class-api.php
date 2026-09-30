@@ -45,9 +45,11 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
         ];
 
         /**
-		 * Send a request to the Pkart licensing API.
+		 * Send a POST request to the Pkart licensing API.
+		 *
+		 * The action goes in the ?action= query string, the data in a JSON body.
          */
-        public function request( $action, array $data = [], $method = 'POST' ) {
+        public function request( $action, array $data = [] ) {
             $route = $this->path( $action );
 
             if ( ! $route ) {
@@ -59,10 +61,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
             list( $path, $query_action ) = $route;
 
-            $method  = strtoupper( $method );
 			$url     = trailingslashit( $this->config->api_base_url() ) . ltrim( $path, '/' );
             $args    = [
-                'method'  => $method,
+                'method'  => 'POST',
                 'timeout' => self::REQUEST_TIMEOUT,
                 'headers' => [
                     'Accept'       => 'application/json',
@@ -74,19 +75,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
                 $url = add_query_arg( 'action', $query_action, $url );
             }
 
-            $data = $this->sanitize_data( $data );
+			$args['body'] = wp_json_encode( $this->sanitize_data( $data ) );
 
-			if ( 'GET' === $method ) {
-				$url = add_query_arg( array_map( 'rawurlencode', $data ), $url );
-			} else {
-				$args['body'] = wp_json_encode( $data );
-
-				if ( false === $args['body'] ) {
-					return new \WP_Error(
-						'pkart_request_encode_failed',
-						__( 'The licensing request could not be encoded.', $this->config->product_sku() )
-					);
-				}
+			if ( false === $args['body'] ) {
+				return new \WP_Error(
+					'pkart_request_encode_failed',
+					__( 'The licensing request could not be encoded.', $this->config->product_sku() )
+				);
 			}
 
             $response = wp_remote_request( $url, $args );
