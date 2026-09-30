@@ -30,27 +30,34 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			$this->config = $config;
 		}
 
+        /**
+         * Map each action to its API route and the ?action= query value.
+         *
+         * @var array
+         */
         private $paths = [
-            'activate'            => 'license/activate',
-            'deactivate'          => 'license/deactivate',
-            'validate'            => 'license/validate',
-			'plugin_activation'   => 'plugin/activation',
-			'plugin_deactivation' => 'plugin/deactivation',
-            'plugin_update'       => 'plugin/update',
+            'activate'            => [ 'license', 'activate' ],
+            'deactivate'          => [ 'license', 'deactivate' ],
+            'validate'            => [ 'license', 'validate' ],
+			'plugin_activation'   => [ 'plugin', 'activate' ],
+			'plugin_deactivation' => [ 'plugin', 'deactivate' ],
+            'plugin_update'       => [ 'plugin', 'update' ],
         ];
 
         /**
 		 * Send a request to the Pkart licensing API.
          */
         public function request( $action, array $data = [], $method = 'POST' ) {
-            $path = $this->path( $action );
+            $route = $this->path( $action );
 
-            if ( ! $path ) {
+            if ( ! $route ) {
                 return new \WP_Error(
                     'pkart_invalid_action',
 					__( 'The licensing action is invalid.', $this->config->product_sku() )
                 );
             }
+
+            list( $path, $query_action ) = $route;
 
             $method  = strtoupper( $method );
 			$url     = trailingslashit( $this->config->api_base_url() ) . ltrim( $path, '/' );
@@ -63,23 +70,24 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
                 ],
             ];
 
+            if ( $query_action ) {
+                $url = add_query_arg( 'action', $query_action, $url );
+            }
+
             $data = $this->sanitize_data( $data );
 
-            if ( 'GET' === $method ) {
-                $url = add_query_arg( $data, $url );
-            } else {
-				$body_data = in_array( $action, [ 'plugin_activation', 'plugin_deactivation' ], true )
-					? [ 'data' => $data ]
-					: $data;
-				$args['body'] = wp_json_encode( $body_data );
+			if ( 'GET' === $method ) {
+				$url = add_query_arg( array_map( 'rawurlencode', $data ), $url );
+			} else {
+				$args['body'] = wp_json_encode( $data );
 
-                if ( false === $args['body'] ) {
-                    return new \WP_Error(
-                        'pkart_request_encode_failed',
+				if ( false === $args['body'] ) {
+					return new \WP_Error(
+						'pkart_request_encode_failed',
 						__( 'The licensing request could not be encoded.', $this->config->product_sku() )
-                    );
-                }
-            }
+					);
+				}
+			}
 
             $response = wp_remote_request( $url, $args );
 
@@ -123,10 +131,10 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		}
 
         /**
-         * Map an action to its API route and HTTP method.
+         * Return the [ route, query action ] pair for an action.
          */
         private function path( $action ) {
-            return $this->paths[ $action ] ?? '';
+            return $this->paths[ $action ] ?? [];
         }
 
         /**
@@ -146,36 +154,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			}
 
 			return $sanitized;
-		}
-
-		/**
-		 * Check whether API URL belongs to local development.
-		 *
-		 * SSL verification is disabled for local development only.
-		 *
-		 * @param string $url API URL.
-		 *
-		 * @return bool
-		 */
-		private function is_local_api_url( $url ) {
-
-			$host = strtolower(
-				(string) wp_parse_url( $url, PHP_URL_HOST )
-			);
-
-			if ( in_array(
-				$host,
-				array(
-					'localhost',
-					'127.0.0.1',
-					'::1',
-				),
-				true
-			) ) {
-				return true;
-			}
-
-			return (bool) preg_match( '/\.local$/', $host );
 		}
 
 		/**
