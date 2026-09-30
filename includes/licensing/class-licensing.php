@@ -43,7 +43,52 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private $option_key;
 
 		/**
-		 * Create the licensing facade.
+		 * One instance per plugin, keyed by plugin basename.
+		 *
+		 * @var Licensing[]
+		 */
+		private static $instances = [];
+
+		/**
+		 * Boot licensing for a plugin. Call once from the main plugin file:
+		 *
+		 *   \Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
+		 *
+		 * Loads package.json, registers the activate/deactivate lifecycle
+		 * events, and returns the plugin's instance. Calling it again with the
+		 * same file returns the same instance.
+		 *
+		 * @param string $plugin_file Main plugin file (__FILE__).
+		 * @return Licensing
+		 */
+		public static function init( $plugin_file ) {
+			$key = plugin_basename( $plugin_file );
+
+			if ( isset( self::$instances[ $key ] ) ) {
+				return self::$instances[ $key ];
+			}
+
+			$instance = new self( new PackageConfig( $plugin_file ) );
+
+			register_activation_hook(
+				$plugin_file,
+				function () use ( $instance ) {
+					$instance->register_plugin_event( 'activate' );
+				}
+			);
+
+			register_deactivation_hook(
+				$plugin_file,
+				function () use ( $instance ) {
+					$instance->register_plugin_event( 'deactivate' );
+				}
+			);
+
+			return self::$instances[ $key ] = $instance;
+		}
+
+		/**
+		 * Create the licensing facade. Prefer Licensing::init().
 		 */
 		public function __construct( PackageConfig $config ) {
 			$this->config     = $config;
@@ -66,18 +111,18 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @return array|\WP_Error
 		 */
 		public function register_plugin_event( $action ) {
-			return $this->api->request(
-				'plugin',
-				$action,
-				[
-					'license_key' => $this->get_stored()['license_key'] ?? '',
-					'product_sku' => $this->config->product_sku(),
-					'plugin_name' => $this->config->title(),
-					'site_url'    => esc_url_raw( home_url() ),
-					'version'     => $this->config->version(),
-					'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized by API.
-				]
-			);
+			$data = [
+				'license_key' => $this->get_stored()['license_key'] ?? '',
+				'product_sku' => $this->config->product_sku(),
+				'site_url'    => esc_url_raw( site_url() ),
+				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized by API.
+				'version'     => $this->config->version(),
+				'status'      => $action,
+			];
+
+			$response = $this->api->request( 'plugin', $action, $data );
+
+			return $response;
 		}
 
 		/**
