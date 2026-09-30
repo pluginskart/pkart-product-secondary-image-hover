@@ -96,7 +96,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
          */
         public function update( $license_key, $product_sku, $plugin_version ) {
             return $this->api->request(
-                'update',
+                'plugin_update',
                 [
                     'license_key'    => $license_key,
                     'product_sku'    => $product_sku,
