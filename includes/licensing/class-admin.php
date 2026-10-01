@@ -47,7 +47,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Admin' ) ) {
 
 			$this->licensing  = $licensing;
 			$this->domain     = $config->product_sku();
-			$this->menu_title = $config->title() ?: $config->plugin_slug();
+			$this->menu_title = $config->title() ?: $config->product_sku();
 
 			add_action( 'admin_menu', [ $this, 'register_menu' ] );
 		}
@@ -60,7 +60,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Admin' ) ) {
 				$this->menu_title,
 				$this->menu_title,
 				'manage_options',
-				'pkart-' . $this->licensing->package_config()->plugin_slug() . '-license',
+				'pkart-' . $this->licensing->package_config()->product_sku() . '-license',
 				[ $this, 'render_page' ]
 			);
 		}

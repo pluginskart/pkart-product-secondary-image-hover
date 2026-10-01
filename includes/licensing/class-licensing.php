@@ -63,8 +63,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		public static function init( $file ) {
 			$config      = new PackageConfig( $file );
-			$plugin_file = WP_PLUGIN_DIR . '/' . $config->plugin_slug();
-			$key         = $config->plugin_slug();
+			$plugin_file = WP_PLUGIN_DIR . '/' . $config->plugin_basename();
+			$key         = $config->product_sku();
 
 			if ( isset( self::$instances[ $key ] ) ) {
 				return self::$instances[ $key ];
@@ -99,7 +99,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		public function __construct( PackageConfig $config ) {
 			$this->config     = $config;
 			$this->api        = new API( $config );
-			$this->option_key = 'pkart_' . $config->plugin_slug() . '_license';
+			$this->option_key = 'pkart_' . $config->product_sku() . '_license';
 
 			add_action( 'admin_post_' . $this->admin_action(), [ $this, 'handle_license_action' ] );
 		}
@@ -413,7 +413,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @return string
 		 */
 		public function admin_action() {
-			return 'pkart_' . $this->config->plugin_slug() . '_license';
+			return 'pkart_' . $this->config->product_sku() . '_license';
 		}
 
 		/**

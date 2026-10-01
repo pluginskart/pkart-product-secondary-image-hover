@@ -185,7 +185,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return string
 		 */
 		public function title() {
-			return $this->string( 'title', $this->plugin_slug() );
+			return $this->string( 'title', $this->product_sku() );
 		}
 
 		/**
@@ -230,7 +230,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 				}
 			}
 
-			$slug = $this->plugin_slug();
+			$slug = $this->product_sku();
 
 			return $slug ? $slug . '/' . $slug . '.php' : '';
 		}
@@ -252,7 +252,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		public function is_valid() {
 			return ! empty( $this->config['pkart-data'] )
 				&& is_array( $this->data() )
-				&& '' !== $this->plugin_slug();
+				&& '' !== $this->product_sku();
 		}
 	}
 }
