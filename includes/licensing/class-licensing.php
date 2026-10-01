@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 	/**
-	 * License facade for one plugin: activate, validate, deactivate, update,
+	 * License facade for one plugin: activate, validate, deactivate,
 	 * plugin lifecycle events, and the admin-post form handler.
 	 *
 	 * Stored option (pkart_{slug}_license):
@@ -195,23 +195,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			}
 
 			return $response;
-		}
-
-		/**
-		 * Check for a plugin update with the stored license.
-		 *
-		 * @return array|\WP_Error
-		 */
-		public function update() {
-			return $this->api->request(
-				'plugin',
-				'update',
-				[
-					'license_key'    => $this->stored_key(),
-					'product_sku'    => $this->config->product_sku(),
-					'plugin_version' => $this->config->version(),
-				]
-			);
 		}
 
 		/*
