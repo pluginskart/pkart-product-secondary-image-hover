@@ -56,17 +56,10 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 				return $this->error( 'pkart_invalid_action', __( 'The licensing action is invalid.', $this->config->product_sku() ) );
 			}
 
-			$url      = $this->endpoint( $type, $action );
+			$url      = add_query_arg( 'action', $action, trailingslashit( $this->config->api_base_url() ) . $type );
 			$response = wp_remote_post( $url, $this->request_args( $url, $data ) );
 
 			return is_wp_error( $response ) ? $response : $this->parse_response( $response );
-		}
-
-		/**
-		 * Build {api_base_url}/{type}?action={action}.
-		 */
-		private function endpoint( $type, $action ) {
-			return add_query_arg( 'action', $action, trailingslashit( $this->config->api_base_url() ) . $type );
 		}
 
 		/**
@@ -77,7 +70,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		private function request_args( $url, array $data ) {
 			return [
 				'timeout'   => self::REQUEST_TIMEOUT,
-				'sslverify' => $this->ssl_verify( $url ),
+				'sslverify' => self::ssl_verify( $url ),
 				'headers'   => [
 					'Accept'       => 'application/json',
 					'Content-Type' => 'application/json',
@@ -90,7 +83,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		 * Verify SSL except on *.local dev hosts (self-signed certificates).
 		 * Override with the `pkart_sdk_sslverify` filter.
 		 */
-		private function ssl_verify( $url ) {
+		public static function ssl_verify( $url ) {
 			$is_local_host = str_ends_with( (string) wp_parse_url( $url, PHP_URL_HOST ), '.local' );
 
 			return (bool) apply_filters( 'pkart_sdk_sslverify', ! $is_local_host, $url );
