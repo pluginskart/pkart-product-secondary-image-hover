@@ -186,7 +186,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		public function activate( $license_key ) {
 			$license_key = sanitize_text_field( $license_key );
 
-			if ( '' === $license_key ) {
+			if ( ! $license_key ) {
 				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', $this->config->product_sku() ) );
 			}
 
@@ -208,7 +208,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		public function validate() {
 			$license_key = $this->stored_key();
 
-			if ( '' === $license_key ) {
+			if ( ! $license_key ) {
 				return $this->error( 'pkart_license_missing', __( 'No license is activated.', $this->config->product_sku() ) );
 			}
 
@@ -229,7 +229,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		public function deactivate() {
 			$license_key = $this->stored_key();
 
-			if ( '' === $license_key ) {
+			if ( ! $license_key ) {
 				delete_option( $this->option_key );
 				return [ 'success' => true ];
 			}
