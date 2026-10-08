@@ -130,6 +130,24 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
+		 * Ask the API whether a newer plugin version is available.
+		 *
+		 * The response has `update_available` (bool) and `new_version`.
+		 *
+		 * @return array|\WP_Error
+		 */
+		public function check_update() {
+			$data = [
+				'license_key' => $this->stored_key(),
+				'product_sku' => $this->config->product_sku(),
+				'site_url'    => esc_url_raw( home_url() ),
+				'version'     => $this->config->version(),
+			];
+
+			return $this->api->request( 'plugin', 'update-check', $data );
+		}
+
+		/**
 		 * Activate a license key for this site and store the result.
 		 *
 		 * @param string $license_key License key.
