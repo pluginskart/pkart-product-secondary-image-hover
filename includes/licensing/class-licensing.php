@@ -15,7 +15,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 	 * plugin lifecycle events, and the admin-post form handler.
 	 *
 	 * Stored option (pkart_{slug}_license):
-	 *   [ license_key, product_sku, domain, response, updated_at ]
+	 *   [ license_key, product_sku, site_url, response, updated_at ]
 	 *
 	 * Pro features are enabled only when response.status === 'active'.
 	 */
@@ -120,61 +120,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			$data = [
 				'license_key' => $this->get_stored()['license_key'] ?? '',
 				'product_sku' => $this->config->product_sku(),
-				'site_url'    => esc_url_raw( site_url() ),
+				'site_url'    => esc_url_raw( home_url() ),
 				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized by API.
 				'version'     => $this->config->version(),
 				'status'      => $action,
 			];
 
-			return $this->remote_post( 'plugin', $action, $data );
-		}
-
-		/**
-		 * POST JSON to {api_base_url}/{type}?action={action} with the WordPress HTTP API.
-		 *
-		 * @param string $type   'plugin' or 'license'.
-		 * @param string $action Route action.
-		 * @param array  $data   Scalar values sent as the JSON body.
-		 * @return array|\WP_Error Decoded response body plus `_http_status`.
-		 */
-		private function remote_post( $type, $action, array $data ) {
-			$url  = add_query_arg( 'action', $action, trailingslashit( $this->config->api_base_url() ) . $type );
-			$body = [];
-
-			foreach ( $data as $key => $value ) {
-				if ( is_scalar( $value ) ) {
-					$body[ sanitize_key( $key ) ] = sanitize_text_field( (string) $value );
-				}
-			}
-
-			$response = wp_remote_post(
-				$url,
-				[
-					'timeout'   => API::REQUEST_TIMEOUT,
-					// Skip SSL verification on *.local dev hosts (self-signed certificates).
-					'sslverify' => API::ssl_verify( $url ),
-					'headers'   => [
-						'Accept'       => 'application/json',
-						'Content-Type' => 'application/json',
-					],
-					'body'      => wp_json_encode( $body ),
-				]
-			);
-
-			if ( is_wp_error( $response ) ) {
-				return $response;
-			}
-
-			$status  = wp_remote_retrieve_response_code( $response );
-			$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-
-			if ( ! is_array( $decoded ) ) {
-				return $this->error( 'pkart_invalid_response', __( 'The licensing API returned an invalid response.', $this->config->product_sku() ) );
-			}
-
-			$decoded['_http_status'] = $status;
-
-			return $decoded;
+			return $this->api->request( 'plugin', $action, $data );
 		}
 
 		/**
@@ -421,13 +373,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		public function package_config() {
 			return $this->config;
-		}
-
-		/**
-		 * @return API
-		 */
-		public function api() {
-			return $this->api;
 		}
 
 		/**

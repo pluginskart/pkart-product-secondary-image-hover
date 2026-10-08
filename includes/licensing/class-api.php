@@ -135,18 +135,5 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		private function error( $code, $message, $data = '' ) {
 			return new \WP_Error( $code, $message, $data );
 		}
-
-		/**
-		 * Get a pkart-data value from package.json.
-		 *
-		 * Kept for backward compatibility; prefer PackageConfig in new code.
-		 *
-		 * @param string $key     Configuration key.
-		 * @param mixed  $default Default value.
-		 * @return mixed
-		 */
-		public function package_value( $key, $default = '' ) {
-			return $this->config->get( $key, $default );
-		}
 	}
 }
