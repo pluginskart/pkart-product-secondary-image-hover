@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       pkart Product Gallery Hover
+ * Plugin Name:       Pkart Product Gallery Hover
  * Plugin URI:        https://github.com/pluginskart/quick-image-swap-for-woocommerce
  * Description:       Automatically displays the first WooCommerce product gallery image when hovering over product images.
  * Version:           1.0.0
