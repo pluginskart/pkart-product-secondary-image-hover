@@ -1,44 +1,25 @@
-# Quick Image Swap for WooCommerce
-
-- Contributors: PluginsKart
-- Tags: woocommerce, product image, product gallery, hover image, product hover
-- Requires at least: 6.7
-- Tested up to: 7.1
-- Requires PHP: 8.1
-- Stable tag: 1.0.0
-- License: GPL-2.0-or-later
-- License URI: https://www.gnu.org/licenses/gpl-2.0.html
-
-Add a CSS-only hover image swap to WooCommerce product loops and Product Collection blocks with no JavaScript or settings page required.
-
-## Description
-
-Quick Image Swap for WooCommerce displays the first image from a WooCommerce product's gallery when visitors hover over the product image.
-
-The plugin is designed for WooCommerce product listing pages, including WooCommerce Product Collection blocks and classic WooCommerce product loops.
-
-It provides a simple CSS-based hover effect without requiring JavaScript or a configuration page.
+based hover effect without requiring JavaScript or a configuration page.
 
 The plugin does not modify the product image gallery on single-product pages.
 
 ## Features
 
-* Display the first product gallery image on hover.
-* Supports WooCommerce Product Collection blocks.
-* Supports classic WooCommerce product loops.
-* Uses the WooCommerce thumbnail image size.
-* CSS-only hover effect.
-* No JavaScript required.
-* No shortcode required.
-* No settings page required.
-* Automatically skips products without gallery images.
-* Does not modify single-product pages.
-* Lightweight frontend implementation.
-* Uses the product-secondary-image CSS class for customization.
+- Display the first product gallery image on hover.
+- Supports WooCommerce Product Collection blocks.
+- Supports classic WooCommerce product loops.
+- Uses the WooCommerce thumbnail image size.
+- CSS-only hover effect.
+- No JavaScript required.
+- No shortcode required.
+- No settings page required.
+- Automatically skips products without gallery images.
+- Does not modify single-product pages.
+- Lightweight frontend implementation.
+- Uses the product-secondary-image CSS class for customization.
 
 ## How It Works
 
-When a product has at least one gallery image, Quick Image Swap for WooCommerce adds the first gallery image as a secondary image in the product listing.
+When a product has at least one gallery image, PluginsKart Product Gallery Hover adds the first gallery image as a secondary image in the product listing.
 
 When a visitor moves the mouse over the product image, the secondary gallery image becomes visible using a CSS transition.
 
@@ -53,17 +34,17 @@ No additional configuration is required.
 1. Make sure WooCommerce is installed and activated.
 2. Upload the plugin ZIP file through Plugins > Add New Plugin > Upload Plugin.
 3. Install the plugin.
-4. Activate Quick Image Swap for WooCommerce.
+4. Activate PluginsKart Product Gallery Hover.
 5. Visit your WooCommerce shop or product archive.
 6. Hover over a product image that has a gallery image.
 
 ### Method 2: Manual Installation
 
 1. Extract the plugin ZIP file.
-2. Upload the plugin folder to: /wp-content/plugins/
+2. Upload the plugin folder to `/wp-content/plugins/`.
 3. Log in to the WordPress dashboard.
 4. Go to Plugins → Installed Plugins.
-5. Locate "Quick Image Swap for WooCommerce".
+5. Locate "PluginsKart Product Gallery Hover".
 6. Click Activate.
 
 The first gallery image will appear when hovering over the product image.
@@ -74,7 +55,7 @@ No additional CSS configuration is required.
 
 ### Does the plugin require WooCommerce?
 
-Yes. Quick Image Swap for WooCommerce requires WooCommerce.
+Yes. PluginsKart Product Gallery Hover requires WooCommerce.
 
 ### Does the plugin work with WooCommerce Product Collection blocks?
 
@@ -106,21 +87,7 @@ No. The plugin works automatically after activation.
 
 ### Can I customize the hover effect?
 
-Yes. The secondary image uses the product-secondary-image CSS class. You can customize its appearance and transition using your theme's CSS.
-
-## Screenshots
-
-The plugin currently includes the following screenshots in the `assets` folder:
-
-- `assets/screenshot-1.png` — product image before hovering
-- `assets/screenshot-2.png` — product image displaying the first gallery image on hover
-
-```md
-![Product image before hovering](assets/screenshot-1.png)
-![Product image displaying the first gallery image on hover](assets/screenshot-2.png)
-```
-
-These screenshots should use a clean product catalog layout and the same aspect ratio for a consistent display in the WordPress plugin directory. If needed, you can also add an optional `assets/screenshot-3.png` later.
+Yes. The secondary image uses the `product-secondary-image` CSS class. You can customize its appearance and transition using your theme's CSS.
 
 ## Customization
 
@@ -132,7 +99,7 @@ You can use this class to customize the hover image transition and appearance.
 
 ## Privacy
 
-Quick Image Swap for WooCommerce does not collect, store, or transmit personal data.
+PluginsKart Product Gallery Hover does not collect, store, or transmit personal data.
 
 The plugin does not connect to any external service.
 
@@ -158,7 +125,7 @@ The plugin does not connect to any external service.
 - Added WooCommerce Product Collection block support.
 - Added the first gallery image as a secondary product image.
 - Added CSS-based hover functionality.
-- Added the product-secondary-image CSS class.
+- Added the `product-secondary-image` CSS class.
 - Excluded single-product pages.
 
 ## Upgrade Notice
