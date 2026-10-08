@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name:       Pkart Product Gallery Hover
- * Plugin URI:        https://github.com/pluginskart/quick-image-swap-for-woocommerce
+ * Plugin Name:       Pkart Product Secondary Image Hover
+ * Plugin URI:        https://github.com/pluginskart/pkart-product-secondary-image-hover
  * Description:       Automatically displays the first WooCommerce product gallery image when hovering over product images.
  * Version:           1.0.0
  * Requires at least: 6.7
@@ -10,7 +10,7 @@
  * Author URI:        https://www.pluginskart.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       pkart-product-gallery-hover
+ * Text Domain:       pkart-product-secondary-image-hover
  * Requires Plugins:  woocommerce
  */
 
@@ -22,17 +22,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Enqueue plugin CSS.
  */
-function pkart_product_image_swap_enqueue_styles() {
+function pkart_product_secondary_image_hover_enqueue_styles() {
 
 	wp_enqueue_style(
-		'pkart-product-gallery-hover',
+		'pkart-product-secondary-image-hover',
 		plugin_dir_url( __FILE__ ) . 'assets/css/style.css',
 		array(),
 		'1.0.0'
 	);
 }
 
-add_action( 'wp_enqueue_scripts', 'pkart_product_image_swap_enqueue_styles' );
+add_action( 'wp_enqueue_scripts', 'pkart_product_secondary_image_hover_enqueue_styles' );
 
 
 /**
@@ -46,7 +46,11 @@ add_action( 'wp_enqueue_scripts', 'pkart_product_image_swap_enqueue_styles' );
  * @param WP_Block $block_instance  Block instance.
  * @return string
  */
-function pkart_product_image_append_gallery( $block_content, $block, $block_instance ) {
+function pkart_product_secondary_image_hover_append_gallery(
+	$block_content,
+	$block,
+	$block_instance
+) {
 
 	// Only target the WooCommerce product image block.
 	if (
@@ -108,7 +112,7 @@ function pkart_product_image_append_gallery( $block_content, $block, $block_inst
 
 add_filter(
 	'render_block',
-	'pkart_product_image_append_gallery',
+	'pkart_product_secondary_image_hover_append_gallery',
 	10,
 	3
 );
