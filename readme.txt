@@ -1,4 +1,4 @@
-=== PluginsKart Product Gallery Hover ===
+=== pkart Product Gallery Hover ===
 
 Contributors: PluginsKart
 Tags: woocommerce, product image, product gallery, hover image, product hover
@@ -13,7 +13,7 @@ Add a CSS-only hover image swap to WooCommerce product loops and Product Collect
 
 == Description ==
 
-PluginsKart Product Gallery Hover displays the first image from a WooCommerce product's gallery when visitors hover over the product image.
+pkart Product Gallery Hover displays the first image from a WooCommerce product's gallery when visitors hover over the product image.
 
 The plugin is designed for WooCommerce product listing pages, including WooCommerce Product Collection blocks and classic WooCommerce product loops.
 
@@ -38,7 +38,7 @@ The plugin does not modify the product image gallery on single-product pages.
 
 == How It Works ==
 
-When a product has at least one gallery image, PluginsKart Product Gallery Hover adds the first gallery image as a secondary image in the product listing.
+When a product has at least one gallery image, pkart Product Gallery Hover adds the first gallery image as a secondary image in the product listing.
 
 When a visitor moves the mouse over the product image, the secondary gallery image becomes visible using a CSS transition.
 
@@ -53,7 +53,7 @@ Method 1: WordPress Admin
 1. Make sure WooCommerce is installed and activated.
 2. Upload the plugin ZIP file through Plugins > Add New Plugin > Upload Plugin.
 3. Install the plugin.
-4. Activate PluginsKart Product Gallery Hover.
+4. Activate pkart Product Gallery Hover.
 5. Visit your WooCommerce shop or product archive.
 6. Hover over a product image that has a gallery image.
 
@@ -63,7 +63,7 @@ Method 2: Manual Installation
 2. Upload the plugin folder to: /wp-content/plugins/
 3. Log in to the WordPress dashboard.
 4. Go to Plugins → Installed Plugins.
-5. Locate "PluginsKart Product Gallery Hover".
+5. Locate "pkart Product Gallery Hover".
 6. Click Activate.
 
 The first gallery image will appear when hovering over the product image.
@@ -74,7 +74,7 @@ No additional CSS configuration is required.
 
 = Does the plugin require WooCommerce? =
 
-Yes. PluginsKart Product Gallery Hover requires WooCommerce.
+Yes. pkart Product Gallery Hover requires WooCommerce.
 
 = Does the plugin work with WooCommerce Product Collection blocks? =
 
@@ -118,7 +118,7 @@ You can use this class to customize the hover image transition and appearance.
 
 == Privacy ==
 
-PluginsKart Product Gallery Hover does not collect, store, or transmit personal data.
+pkart Product Gallery Hover does not collect, store, or transmit personal data.
 
 The plugin does not connect to any external service.
 

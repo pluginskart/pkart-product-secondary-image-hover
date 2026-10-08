@@ -1,17 +1,17 @@
 <?php
 /**
- * Plugin Name:           PluginsKart Product Gallery Hover
- * Plugin URI:            https://github.com/pluginskart/pluginsKart-product-gallery-hover
- * Description:           Automatically displays the first WooCommerce product gallery image when hovering over product images.
- * Version:               1.0.0
- * Requires at least:     6.7
- * Requires PHP:          8.1
- * Author:                PluginsKart
- * Author URI:            https://www.pluginskart.com/
- * License:               GPL-2.0-or-later
- * License URI:            https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:           pluginskart-product-gallery-hover
- * Requires Plugins:      woocommerce
+ * Plugin Name:       pkart Product Gallery Hover
+ * Plugin URI:        https://github.com/pluginskart/quick-image-swap-for-woocommerce
+ * Description:       Automatically displays the first WooCommerce product gallery image when hovering over product images.
+ * Version:           1.0.0
+ * Requires at least: 6.7
+ * Requires PHP:      8.1
+ * Author:            PluginsKart
+ * Author URI:        https://www.pluginskart.com/
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       pkart-product-gallery-hover
+ * Requires Plugins:  woocommerce
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function pkart_product_image_swap_enqueue_styles() {
 
 	wp_enqueue_style(
-		'pluginskart-product-gallery-hover',
+		'pkart-product-gallery-hover',
 		plugin_dir_url( __FILE__ ) . 'assets/css/style.css',
 		array(),
 		'1.0.0'
@@ -37,13 +37,13 @@ add_action( 'wp_enqueue_scripts', 'pkart_product_image_swap_enqueue_styles' );
 
 /**
  * Append the first gallery image after the main product thumbnail
- * inside the woocommerce/product-image block, enabling CSS hover-swap effects.
+ * inside the WooCommerce product image block.
  *
- * Works with Product Collection (block context postId) and the classic loop.
+ * Works with Product Collection blocks and classic product loops.
  *
  * @param string   $block_content   Rendered HTML.
  * @param array    $block           Parsed block data.
- * @param WP_Block $block_instance  Block instance (carries context).
+ * @param WP_Block $block_instance  Block instance.
  * @return string
  */
 function pkart_product_image_append_gallery( $block_content, $block, $block_instance ) {
