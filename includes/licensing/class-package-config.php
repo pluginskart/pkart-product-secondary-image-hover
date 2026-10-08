@@ -22,11 +22,23 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 	final class PackageConfig {
 
 		/**
+		 * How many directories to walk up looking for package.json.
+		 */
+		const MAX_DEPTH = 4;
+
+		/**
 		 * Complete decoded package data.
 		 *
 		 * @var array
 		 */
 		private $config = array();
+
+		/**
+		 * The pkart-data section of the package.
+		 *
+		 * @var array
+		 */
+		private $data = array();
 
 		/**
 		 * Package file path.
@@ -36,6 +48,13 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		private $package_file = '';
 
 		/**
+		 * Memoized derived values.
+		 *
+		 * @var array
+		 */
+		private $cache = array();
+
+		/**
 		 * Constructor.
 		 *
 		 * @param string $plugin_file A file inside the plugin.
@@ -43,14 +62,17 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		public function __construct( $plugin_file ) {
 			$this->package_file = self::locate_package_file( $plugin_file );
 
-			if ( $this->package_file && is_readable( $this->package_file ) ) {
-				$data = wp_json_file_decode(
-					$this->package_file,
-					array( 'associative' => true )
-				);
+			if ( ! $this->package_file ) {
+				return;
+			}
 
-				if ( is_array( $data ) ) {
-					$this->config = $data;
+			$config = wp_json_file_decode( $this->package_file, array( 'associative' => true ) );
+
+			if ( is_array( $config ) ) {
+				$this->config = $config;
+
+				if ( isset( $config['pkart-data'] ) && is_array( $config['pkart-data'] ) ) {
+					$this->data = $config['pkart-data'];
 				}
 			}
 		}
@@ -68,10 +90,10 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 				return '';
 			}
 
-			$directory = is_dir( $path ) ? $path : dirname( $path );
+			$directory = is_dir( $path ) ? untrailingslashit( $path ) : dirname( $path );
 
-			for ( $i = 0; $i < 4; $i++ ) {
-				$candidate = trailingslashit( $directory ) . 'package.json';
+			for ( $i = 0; $i < self::MAX_DEPTH; $i++ ) {
+				$candidate = $directory . '/package.json';
 
 				if ( is_readable( $candidate ) ) {
 					return $candidate;
@@ -90,6 +112,21 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		}
 
 		/**
+		 * Return a memoized value, computing it on first access.
+		 *
+		 * @param string   $key      Cache key.
+		 * @param callable $callback Producer.
+		 * @return mixed
+		 */
+		private function remember( $key, $callback ) {
+			if ( ! array_key_exists( $key, $this->cache ) ) {
+				$this->cache[ $key ] = $callback();
+			}
+
+			return $this->cache[ $key ];
+		}
+
+		/**
 		 * Return complete package data.
 		 *
 		 * @return array
@@ -104,11 +141,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return array
 		 */
 		public function data() {
-			$data = isset( $this->config['pkart-data'] )
-				? $this->config['pkart-data']
-				: array();
-
-			return is_array( $data ) ? $data : array();
+			return $this->data;
 		}
 
 		/**
@@ -119,9 +152,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return mixed
 		 */
 		public function get( $key, $default = '' ) {
-			$value = $this->data();
-
-			return array_key_exists( $key, $value ) ? $value[ $key ] : $default;
+			return array_key_exists( $key, $this->data ) ? $this->data[ $key ] : $default;
 		}
 
 		/**
@@ -140,7 +171,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 
 			$value = sanitize_text_field( (string) $value );
 
-			return '' !== trim( $value ) ? $value : $default;
+			return '' !== $value ? $value : $default;
 		}
 
 		/**
@@ -152,13 +183,14 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return string
 		 */
 		public function plugin_slug() {
-			$slug = $this->string( 'plugin_slug' );
+			return $this->remember(
+				'plugin_slug',
+				function () {
+					$slug = $this->string( 'plugin_slug' );
 
-			if ( ! $slug ) {
-				$slug = $this->string( 'product_sku' );
-			}
-
-			return sanitize_key( $slug );
+					return sanitize_key( $slug ? $slug : $this->string( 'product_sku' ) );
+				}
+			);
 		}
 
 		/**
@@ -167,7 +199,12 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return string
 		 */
 		public function product_sku() {
-			return sanitize_text_field( $this->string( 'product_sku', $this->plugin_slug() ) );
+			return $this->remember(
+				'product_sku',
+				function () {
+					return $this->string( 'product_sku', $this->plugin_slug() );
+				}
+			);
 		}
 
 		/**
@@ -176,7 +213,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return string
 		 */
 		public function version() {
-			return $this->string( 'version', '' );
+			return $this->string( 'version' );
 		}
 
 		/**
@@ -200,37 +237,47 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		/**
 		 * Return the plugin main file basename.
 		 *
-		 * The title from package.json is used to identify the WordPress
-		 * plugin header, avoiding another plugin-specific setting.
+		 * The conventional {slug}/{slug}.php file is checked first. Otherwise
+		 * the title from package.json identifies the WordPress plugin header,
+		 * avoiding another plugin-specific setting.
 		 *
 		 * @return string
 		 */
 		public function plugin_basename() {
+			return $this->remember( 'plugin_basename', array( $this, 'find_plugin_basename' ) );
+		}
+
+		/**
+		 * Resolve the plugin main file basename.
+		 *
+		 * @return string
+		 */
+		private function find_plugin_basename() {
+			$slug  = $this->product_sku();
 			$title = $this->title();
+			$root  = $this->package_file ? dirname( $this->package_file ) : '';
 
-			if ( $title ) {
-				$root = $this->package_file ? dirname( $this->package_file ) : '';
+			if ( $root && $title ) {
+				$candidates = glob( $root . '/*.php' );
+				$candidates = is_array( $candidates ) ? $candidates : array();
 
-				if ( $root && is_dir( $root ) ) {
-					$files = glob( trailingslashit( $root ) . '*.php' );
+				// Check the conventional main file first to avoid reading every header.
+				$preferred = $root . '/' . $slug . '.php';
+				$index     = array_search( $preferred, $candidates, true );
 
-					if ( is_array( $files ) ) {
-						foreach ( $files as $file ) {
-							$headers = get_file_data(
-								$file,
-								array( 'Name' => 'Plugin Name' ),
-								'plugin'
-							);
+				if ( false !== $index ) {
+					unset( $candidates[ $index ] );
+					array_unshift( $candidates, $preferred );
+				}
 
-							if ( ! empty( $headers['Name'] ) && $headers['Name'] === $title ) {
-								return plugin_basename( $file );
-							}
-						}
+				foreach ( $candidates as $file ) {
+					$headers = get_file_data( $file, array( 'Name' => 'Plugin Name' ), 'plugin' );
+
+					if ( $headers['Name'] === $title ) {
+						return plugin_basename( $file );
 					}
 				}
 			}
-
-			$slug = $this->product_sku();
 
 			return $slug ? $slug . '/' . $slug . '.php' : '';
 		}
@@ -250,9 +297,7 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		 * @return bool
 		 */
 		public function is_valid() {
-			return ! empty( $this->config['pkart-data'] )
-				&& is_array( $this->data() )
-				&& '' !== $this->product_sku();
+			return ! empty( $this->data ) && '' !== $this->product_sku();
 		}
 	}
 }
