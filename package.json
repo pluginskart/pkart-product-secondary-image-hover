@@ -10,6 +10,7 @@
 		"author_profile": "https://pluginskart.com",
 		"tested": "6.7",
 		"version": "1.0.0",
+		"new_version": "1.0.1",
 		"requires": "6.5",
 		"requires_php": "8.2",
 		"plugin_slug": "quick-image-swap-for-woocommerce",

@@ -142,6 +142,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				'product_sku' => $this->config->product_sku(),
 				'site_url'    => esc_url_raw( home_url() ),
 				'version'     => $this->config->version(),
+				'new_version' => $this->config->new_version(),
 			];
 
 			return $this->api->request( 'plugin', 'update-check', $data );

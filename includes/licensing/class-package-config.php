@@ -217,6 +217,15 @@ if ( ! class_exists( __NAMESPACE__ . '\\PackageConfig' ) ) {
 		}
 
 		/**
+		 * Return the plugin new version.
+		 *
+		 * @return string
+		 */
+		public function new_version() {
+			return $this->string( 'new_version' );
+		}
+
+		/**
 		 * Return the plugin title.
 		 *
 		 * @return string
