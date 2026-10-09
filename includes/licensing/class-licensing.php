@@ -88,6 +88,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 			if ( is_admin() ) {
 				new Licensing\Admin( $instance );
+				new Licensing\UpdateNotice( $instance );
 			}
 
 			return self::$instances[ $key ] = $instance;
@@ -121,7 +122,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				'license_key' => $this->get_stored()['license_key'] ?? '',
 				'product_sku' => $this->config->product_sku(),
 				'site_url'    => esc_url_raw( home_url() ),
-				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- sanitized by API.
+				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
 				'version'     => $this->config->version(),
 				'status'      => $action,
 			];

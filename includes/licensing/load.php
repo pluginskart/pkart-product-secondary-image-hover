@@ -18,6 +18,7 @@ require_once __DIR__ . '/class-package-config.php';
 require_once __DIR__ . '/class-api.php';
 require_once __DIR__ . '/class-licensing.php';
 require_once __DIR__ . '/class-admin.php';
+require_once __DIR__ . '/class-update-notice.php';
 
 /**
  * Initialize the Pkart licensing SDK.
