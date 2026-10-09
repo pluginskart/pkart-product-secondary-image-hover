@@ -82,17 +82,23 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Admin' ) ) {
 		 * @param array $args Optional title and description overrides.
 		 */
 		public function render_license_section( array $args = [] ) {
+			// Fetch the plugin's licensing instance directly (init() returns the existing one).
+			$licensing  = Licensing::init( __FILE__ );
+			$config     = $licensing->package_config();
+			$domain     = $config->product_sku();
+			$menu_title = $config->title() ?: $config->product_sku();
+
 			$args = wp_parse_args(
 				$args,
 				[
 					/* translators: %s: plugin menu title. */
-					'title'       => sprintf( __( '%s License', $this->domain ), $this->menu_title ),
-					'description' => __( 'Activate your license key to enable PRO updates and licensing validation.', $this->domain ),
+					'title'       => sprintf( __( '%s License', $domain ), $menu_title ),
+					'description' => __( 'Activate your license key to enable PRO updates and licensing validation.', $domain ),
 				]
 			);
 
-			$license = $this->licensing->get_stored();
-			$notice  = $this->licensing->pop_notice();
+			$license = $licensing->get_stored();
+			$notice  = $licensing->pop_notice();
 			?>
 			<h1><?php echo esc_html( $args['title'] ); ?></h1>
 
@@ -105,11 +111,11 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Admin' ) ) {
 			<p><?php echo esc_html( $args['description'] ); ?></p>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-				<?php wp_nonce_field( $this->licensing->admin_action() ); ?>
-				<input type="hidden" name="action" value="<?php echo esc_attr( $this->licensing->admin_action() ); ?>">
+				<?php wp_nonce_field( $licensing->admin_action() ); ?>
+				<input type="hidden" name="action" value="<?php echo esc_attr( $licensing->admin_action() ); ?>">
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', $this->domain ); ?></label></th>
+						<th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', $domain ); ?></label></th>
 						<td>
 							<input
 								type="text"
@@ -119,18 +125,18 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Admin' ) ) {
 								value="<?php echo esc_attr( $license['license_key'] ?? '' ); ?>"
 								autocomplete="off"
 							>
-							<p class="description"><?php esc_html_e( 'Mock valid key: PKMOCK-2026-TEST-0001', $this->domain ); ?></p>
+							<p class="description"><?php esc_html_e( 'Mock valid key: PKMOCK-2026-TEST-0001', $domain ); ?></p>
 						</td>
 					</tr>
 				</table>
 				<p class="submit">
-					<?php if ( $this->licensing->is_active() ) : ?>
+					<?php if ( $licensing->is_active() ) : ?>
 						<button class="button" type="submit" name="license_action" value="deactivate">
-							<?php esc_html_e( 'Deactivate License', $this->domain ); ?>
+							<?php esc_html_e( 'Deactivate License', $domain ); ?>
 						</button>
 					<?php else : ?>
 						<button class="button button-primary" type="submit" name="license_action" value="activate">
-							<?php esc_html_e( 'Activate License', $this->domain ); ?>
+							<?php esc_html_e( 'Activate License', $domain ); ?>
 						</button>
 					<?php endif; ?>
 				</p>
