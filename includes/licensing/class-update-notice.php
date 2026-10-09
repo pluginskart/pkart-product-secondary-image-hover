@@ -39,21 +39,22 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\UpdateNotice' ) ) {
 		private static $registered = [];
 
 		/**
-		 * Register the Plugins screen row.
+		 * Register the Plugins screen row for one plugin.
 		 *
-		 * @param Licensing|PackageConfig $source Licensing facade or package config.
+		 * @param Licensing|PackageConfig $source   Licensing facade, or package config for an inactive plugin.
+		 * @param string                  $basename Plugin basename, when already known.
 		 */
-		public function __construct( $source ) {
-			$config   = $source instanceof Licensing ? $source->package_config() : $source;
-			$basename = $config->plugin_basename();
+		public function __construct( $source, $basename = '' ) {
+			$this->config = $source instanceof Licensing ? $source->package_config() : $source;
+			$this->domain = $this->config->product_sku();
 
-			$this->config = $config;
-			$this->domain = $config->product_sku();
+			$basename = $basename ? $basename : $this->config->plugin_basename();
 
 			if ( ! $basename || isset( self::$registered[ $basename ] ) ) {
 				return;
 			}
 
+			// First instance: scan for inactive Pkart plugins when the Plugins screen loads.
 			if ( ! self::$registered ) {
 				add_action( 'load-plugins.php', [ __CLASS__, 'register_inactive_plugins' ] );
 			}
@@ -66,14 +67,15 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\UpdateNotice' ) ) {
 		/**
 		 * Add notice rows for inactive Pkart plugins, whose own code is not
 		 * loaded. A Pkart plugin is any plugin folder whose package.json has
-		 * pkart-data.
+		 * pkart-data with a title matching the plugin's Name header.
 		 */
 		public static function register_inactive_plugins() {
-			if ( ! function_exists( 'get_plugins' ) ) {
-				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			if ( ! current_user_can( 'update_plugins' ) ) {
+				return;
 			}
 
-			foreach ( array_keys( get_plugins() ) as $plugin_file ) {
+			// get_plugins() is cached for the request; the list table calls it too.
+			foreach ( get_plugins() as $plugin_file => $plugin_data ) {
 				$dir = dirname( $plugin_file );
 
 				if ( '.' === $dir || isset( self::$registered[ $plugin_file ] ) ) {
@@ -88,8 +90,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\UpdateNotice' ) ) {
 
 				$config = new PackageConfig( $package );
 
-				if ( $config->data() && $config->plugin_basename() === $plugin_file ) {
-					new self( $config );
+				if ( $config->is_valid() && $config->title() === $plugin_data['Name'] ) {
+					new self( $config, $plugin_file );
 				}
 			}
 		}
