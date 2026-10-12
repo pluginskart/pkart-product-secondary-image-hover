@@ -18,6 +18,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'PKART_BASE_URL' ) ) {
+    define( 'PKART_BASE_URL', 'https://wordpress.local/wp-json/pkart-sdk/v1/' );
+}
+if ( ! defined( 'PKART_PRODUCT_SKU' ) ) {
+    define( 'PKART_PRODUCT_SKU', 'pkart-product-secondary-image-hover' );
+}
+if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
+    define( 'PKART_PRODUCT_VERSION', '1.0.0' );
+}
 
 /**
  * Enqueue plugin CSS.
