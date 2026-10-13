@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'PKART_BASE_URL' ) ) {
-    define( 'PKART_BASE_URL', 'https://wordpress.local/wp-json/pkart-sdk/v1/' );
+    define( 'PKART_BASE_URL', 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/' );
 }
 if ( ! defined( 'PKART_PRODUCT_SKU' ) ) {
     define( 'PKART_PRODUCT_SKU', 'pkart-product-secondary-image-hover' );
@@ -27,6 +27,11 @@ if ( ! defined( 'PKART_PRODUCT_SKU' ) ) {
 if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
     define( 'PKART_PRODUCT_VERSION', '1.0.0' );
 }
+
+require_once __DIR__ . '/includes/licensing/class-api.php';
+require_once __DIR__ . '/includes/licensing/class-licensing.php';
+
+\Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
 
 /**
  * Enqueue plugin CSS.
