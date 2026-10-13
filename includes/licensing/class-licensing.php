@@ -16,45 +16,15 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 	class Licensing {
 
 		/**
-		 * API client.
-		 *
-		 * @var API
-		 */
-		private $api;
-
-		/**
 		 * Boot lifecycle tracking for a plugin:
 		 *
 		 *   \Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
 		 *
 		 * @param string $plugin_file Main plugin file.
-		 * @return Licensing
 		 */
-		public static function init( $plugin_file ) {
-			$instance = new self();
-
-			register_activation_hook(
-				$plugin_file,
-				function () use ( $instance ) {
-					$instance->register_plugin_event( 'activate' );
-				}
-			);
-
-			register_deactivation_hook(
-				$plugin_file,
-				function () use ( $instance ) {
-					$instance->register_plugin_event( 'deactivate' );
-				}
-			);
-
-			return $instance;
-		}
-
-		/**
-		 * Create the lifecycle tracker. Prefer Licensing::init().
-		 */
-		public function __construct() {
-			$this->api = new API();
+		public static function init( $plugin_file ): void {
+			register_activation_hook( $plugin_file, fn() => ( new self() )->register_plugin_event( 'activate' ) );
+			register_deactivation_hook( $plugin_file, fn() => ( new self() )->register_plugin_event( 'deactivate' ) );
 		}
 
 		/**
@@ -82,7 +52,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			// fwrite($write_plugins, print_r($data, true) . PHP_EOL);
 			// fclose($write_plugins);
 
-			return $this->api->request( 'plugin', $action, $data );
+			return ( new API() )->request( 'plugin', $action, $data );
 		}
 
 		/**
