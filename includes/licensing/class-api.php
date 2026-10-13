@@ -17,6 +17,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
 		const REQUEST_TIMEOUT = 15;
 
+		Const API_BASE_URL = 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/';
+
 		/**
 		 * Allowed actions per route type. Mirrors the API server.
 		 */
@@ -39,7 +41,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 				return $this->error( 'pkart_invalid_action', __( 'The licensing action is invalid.', PKART_PRODUCT_SKU ) );
 			}
 
-			$url      = add_query_arg( 'action', $action, trailingslashit( PKART_BASE_URL ) . $type );
+			$url      = add_query_arg( 'action', $action, trailingslashit( self::API_BASE_URL ) . $type );
 			$response = wp_remote_post( $url, $this->request_args( $url, $data ) );
 
 			return is_wp_error( $response ) ? $response : $this->parse_response( $response );
