@@ -19,8 +19,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
 		Const API_BASE_URL = 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/';
 
-		const PKART_PRODUCT_SKU = 'pkart-product-secondary-image-hover';
-
 		/**
 		 * Allowed actions per route type. Mirrors the API server.
 		 */
@@ -40,7 +38,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		 */
 		public function request( $type, $action, array $data = [] ) {
 			if ( ! in_array( $action, self::ACTIONS[ $type ] ?? [], true ) ) {
-				return $this->error( 'pkart_invalid_action', __( 'The licensing action is invalid.', PKART_PRODUCT_SKU ) );
+				return $this->error( 'pkart_invalid_action', __( 'The licensing action is invalid.' ) );
 			}
 
 			$url      = add_query_arg( 'action', $action, trailingslashit( self::API_BASE_URL ) . $type );
@@ -89,7 +87,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			if ( ! is_array( $decoded ) ) {
 				return $this->error(
 					'pkart_invalid_response',
-					__( 'The licensing API returned an invalid response.', PKART_PRODUCT_SKU ),
+					__( 'The licensing API returned an invalid response.'),
 					[ 'status' => $status ]
 				);
 			}
