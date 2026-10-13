@@ -28,10 +28,14 @@ if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
     define( 'PKART_PRODUCT_VERSION', '1.0.0' );
 }
 
-require_once __DIR__ . '/includes/licensing/class-api.php';
-require_once __DIR__ . '/includes/licensing/class-licensing.php';
+if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
+	require_once __DIR__ . '/includes/licensing/class-api.php';
+	require_once __DIR__ . '/includes/licensing/class-licensing.php';
+}
 
-\Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
+// Main plugin file
+\Pkart\LicenseManager\V1\Licensing::init( __FILE__, PKART_PRODUCT_SKU, PKART_PRODUCT_VERSION );
+
 
 /**
  * Enqueue plugin CSS.
