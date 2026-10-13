@@ -11,13 +11,15 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 	/**
 	 * HTTP client for the Pkart licensing API.
 	 *
-	 * Every call is: POST {PKART_BASE_URL}/{type}?action={action} with a JSON body.
+	 * Every call is: POST {API_BASE_URL}/{type}?action={action} with a JSON body.
 	 */
 	class API {
 
 		const REQUEST_TIMEOUT = 15;
 
 		Const API_BASE_URL = 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/';
+
+		const PKART_PRODUCT_SKU = 'pkart-product-secondary-image-hover';
 
 		/**
 		 * Allowed actions per route type. Mirrors the API server.

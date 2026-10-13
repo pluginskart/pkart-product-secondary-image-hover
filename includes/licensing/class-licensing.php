@@ -11,33 +11,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 	/**
-	 * Sends plugin activate/deactivate lifecycle events to the Pkart API.
+	 * Sends plugin lifecycle events to the Pkart API.
 	 */
 	class Licensing {
 
 		/**
 		 * Boot lifecycle tracking for a plugin:
 		 *
-		 *   \Pkart\LicenseManager\V1\Licensing::init( __FILE__ );
+		 *   \Pkart\LicenseManager\V1\Licensing::init( __FILE__, 'my-plugin-sku', '1.0.0' );
 		 *
 		 * @param string $plugin_file Main plugin file.
+		 * @param string $product_sku Product SKU.
+		 * @param string $version     Plugin version.
 		 */
-		public static function init( $plugin_file ): void {
-			register_activation_hook( $plugin_file, fn() => ( new self() )->register_plugin_event( 'activate' ) );
-			register_deactivation_hook( $plugin_file, fn() => ( new self() )->register_plugin_event( 'deactivate' ) );
+		public static function init( $plugin_file, $product_sku, $version ): void {
+			register_activation_hook( $plugin_file, fn() => ( new self() )->register_plugin_event( 'activate', $product_sku, $version ) );
+			register_deactivation_hook( $plugin_file, fn() => ( new self() )->register_plugin_event( 'deactivate', $product_sku, $version ) );
 		}
 
 		/**
 		 * Send a plugin activate/deactivate lifecycle event.
 		 *
-		 * @param string $action 'activate' or 'deactivate'.
+		 * @param string $action      'activate' or 'deactivate'.
+		 * @param string $product_sku Product SKU.
+		 * @param string $version     Plugin version.
 		 * @return array|\WP_Error
 		 */
-		public function register_plugin_event( $action ) {
+		public function register_plugin_event( $action, $product_sku, $version ) {
 			$data = [
 				'license_key' => 'PKMOCK-2026-TEST-0001',
-				'product_sku' => PKART_PRODUCT_SKU,
-				'version'     => PKART_PRODUCT_VERSION,
+				'product_sku' => $product_sku,
+				'version'     => $version,
 				'site_url'    => esc_url_raw( home_url() ),
 				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
 				'wp_version'  => get_bloginfo( 'version' ),

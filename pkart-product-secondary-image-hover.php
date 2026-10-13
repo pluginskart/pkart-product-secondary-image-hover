@@ -18,23 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! defined( 'PKART_BASE_URL' ) ) {
-    define( 'PKART_BASE_URL', 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/' );
-}
-if ( ! defined( 'PKART_PRODUCT_SKU' ) ) {
-    define( 'PKART_PRODUCT_SKU', 'pkart-product-secondary-image-hover' );
-}
-if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
-    define( 'PKART_PRODUCT_VERSION', '1.0.0' );
-}
-
 if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 	require_once __DIR__ . '/includes/licensing/class-api.php';
 	require_once __DIR__ . '/includes/licensing/class-licensing.php';
 }
 
 // Main plugin file
-\Pkart\LicenseManager\V1\Licensing::init( __FILE__, PKART_PRODUCT_SKU, PKART_PRODUCT_VERSION );
+\Pkart\LicenseManager\V1\Licensing::init( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
 
 
 /**
