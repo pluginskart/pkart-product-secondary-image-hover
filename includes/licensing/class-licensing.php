@@ -33,25 +33,11 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @param string $product_sku Product SKU.
 		 * @param string $version     Plugin version.
 		 */
-		public function __construct( $product_sku, $version ) {
+		public function __construct($file, $product_sku, $version ) {
 			$this->product_sku = $product_sku;
 			$this->version     = $version;
-		}
-
-		/**
-		 * Boot lifecycle tracking for a plugin:
-		 *
-		 *   \Pkart\LicenseManager\V1\Licensing::init( __FILE__, 'my-plugin-sku', '1.0.0' );
-		 *
-		 * @param string $plugin_file Main plugin file.
-		 * @param string $product_sku Product SKU.
-		 * @param string $version     Plugin version.
-		 */
-		public static function init( $plugin_file, $product_sku, $version ): void {
-			$licensing = new self( $product_sku, $version );
-			register_activation_hook( $plugin_file, fn() => $licensing->register_plugin_event( 'activate' ) );
-			register_deactivation_hook( $plugin_file, fn() => $licensing->register_plugin_event( 'deactivate' ) );
-			add_action( 'admin_post_' . $licensing->admin_action(), [ $licensing, 'handle_license_action' ] );
+			register_activation_hook( $file,  $this->register_plugin_event( 'activate' ) );
+			register_deactivation_hook( $file, $this->register_plugin_event( 'deactivate' ) );
 		}
 
 		/**

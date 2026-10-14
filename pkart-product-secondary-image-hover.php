@@ -31,7 +31,7 @@ if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 }
 
 // Main plugin file
-\Pkart\LicenseManager\V1\Licensing::init( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
+new \Pkart\LicenseManager\V1\Licensing( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
 
 
 add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
