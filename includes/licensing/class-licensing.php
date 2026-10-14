@@ -154,11 +154,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', $this->product_sku ) );
 			}
 			$response = $this->license_request( 'activate', $license_key );
-
 			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
 				$this->store( $license_key, $response );
 			}
-
 			return $response;
 		}
 
@@ -166,18 +164,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * Deactivate the stored license key for this site and clear local state.
 		 */
 		public function deactivate() {
-			$license_key = $this->stored_key();
-			if ( ! $license_key ) {
-				return $this->error( 'pkart_license_missing', __( 'No license key is active on this site.', $this->product_sku ) );
-			}
-
-			$response = $this->license_request( 'deactivate', $license_key );
-
-			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
-				delete_option( $this->option_key );
-			}
-
-			return $response;
+			delete_option( $this->option_key );
+			return $this->license_request( 'deactivate' );
 		}
 
 		/**
@@ -185,26 +173,21 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		public function validate() {
 			$license_key = $this->stored_key();
-
 			if ( ! $license_key ) {
 				return $this->error( 'pkart_license_missing', __( 'No license is activated.', $this->product_sku ) );
 			}
-
 			$response = $this->license_request( 'validate', $license_key );
-
 			if ( ! is_wp_error( $response ) && isset( $response['status'] ) ) {
 				$this->store( $license_key, $response );
 			}
-
 			return $response;
 		}
 
 		/**
 		 * Send a license request with the common payload.
 		 */
-		private function license_request( $action, $license_key ) {
+		private function license_request( $action, $license_key = null ) {
 			$data = $this->get_pluginskart_data( $license_key );
-
 			return ( new API() )->request( 'license', $action, $data );
 		}
 
