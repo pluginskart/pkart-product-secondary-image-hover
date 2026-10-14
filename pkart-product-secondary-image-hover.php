@@ -18,6 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'PKART_PRODUCT_SKU' ) ) {
+	define( 'PKART_PRODUCT_SKU', 'pkart-product-secondary-image-hover' );
+}
+if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
+	define( 'PKART_PRODUCT_VERSION', '1.0.0' );
+}
+
 if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 	require_once __DIR__ . '/includes/licensing/class-api.php';
 	require_once __DIR__ . '/includes/licensing/class-licensing.php';
@@ -25,6 +32,80 @@ if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 
 // Main plugin file
 \Pkart\LicenseManager\V1\Licensing::init( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
+
+
+add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
+/**
+ * Add the license screen under Settings.
+ */
+function pkart_product_secondary_image_hover_register_menu(): void {
+	$title = __( 'Product Secondary Image Hover License', PKART_PRODUCT_SKU );
+
+	add_options_page(
+		$title,
+		$title,
+		'manage_options',
+		'pkart-' . PKART_PRODUCT_SKU . '-license',
+		'pkart_product_secondary_image_hover_render_page'
+	);
+}
+
+/**
+ * Render the license page.
+ */
+function pkart_product_secondary_image_hover_render_page(): void {
+	echo '<div class="wrap">';
+	pkart_product_secondary_image_hover_render_license_section();
+	echo '</div>';
+}
+
+/**
+ * Render the reusable licensing section on any admin page.
+ *
+ * @param array $args Optional title and description overrides.
+ */
+function pkart_product_secondary_image_hover_render_license_section( array $args = [] ): void {
+	$args = wp_parse_args(
+		$args,
+		[
+			/* translators: %s: plugin menu title. */
+			'title'       => sprintf( __( '%s License', PKART_PRODUCT_SKU ), 'Product Secondary Image Hover' ),
+			'description' => __( 'Activate your license key to enable PRO updates and licensing validation.', PKART_PRODUCT_SKU ),
+		]
+	);
+
+	$licensing = new \Pkart\LicenseManager\V1\Licensing( PKART_PRODUCT_SKU, PKART_PRODUCT_VERSION );
+	$action    = $licensing->admin_action();
+	$is_active = $licensing->is_active();
+	?>
+	<h1><?php echo esc_html( $args['title'] ); ?></h1>
+	<p><?php echo esc_html( $args['description'] ); ?></p>
+
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<?php wp_nonce_field( $action ); ?>
+		<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>">
+		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', PKART_PRODUCT_SKU ); ?></label></th>
+				<td>
+					<input type="text" class="regular-text" id="pkart-license-key" name="license_key" value="" autocomplete="off">
+					<p class="description"><?php esc_html_e( 'Mock valid key: PKMOCK-2026-TEST-0001', PKART_PRODUCT_SKU ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<p class="submit">
+			<button
+				type="submit"
+				class="<?php echo esc_attr( $is_active ? 'button' : 'button button-primary' ); ?>"
+				name="license_action"
+				value="<?php echo esc_attr( $is_active ? 'deactivate' : 'activate' ); ?>"
+			>
+				<?php echo esc_html( $is_active ? __( 'Deactivate License', PKART_PRODUCT_SKU ) : __( 'Activate License', PKART_PRODUCT_SKU ) ); ?>
+			</button>
+		</p>
+	</form>
+	<?php
+}
 
 
 /**
