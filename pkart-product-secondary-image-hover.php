@@ -18,67 +18,54 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! defined( 'PKART_PRODUCT_SKU' ) ) {
-	define( 'PKART_PRODUCT_SKU', 'pkart-product-secondary-image-hover' );
-}
-if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
-	define( 'PKART_PRODUCT_VERSION', '1.0.0' );
-}
+const PKART_PRODUCT_SKU     = 'pkart-product-secondary-image-hover';
+const PKART_PRODUCT_VERSION = '1.0.0';
 
 if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 	require_once __DIR__ . '/includes/licensing/class-licensing.php';
 }
 
 // Main plugin file
-new \Pkart\LicenseManager\V1\Licensing( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
+//new \Pkart\LicenseManager\V1\Licensing( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
 
+global $licensing;
+$licensing = new \Pkart\LicenseManager\V1\Licensing( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
 
-add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
 /**
  * Add the license screen under Settings.
  */
 function pkart_product_secondary_image_hover_register_menu(): void {
-	$title = __( 'Product Secondary Image Hover License', PKART_PRODUCT_SKU );
-
 	add_options_page(
-		$title,
-		$title,
+		'Product Secondary Image Hover License',
+		'Product Secondary Image Hover License',
 		'manage_options',
-		'pkart-' . PKART_PRODUCT_SKU . '-license',
-		'pkart_product_secondary_image_hover_render_page'
+		PKART_PRODUCT_SKU . '-license',
+		'render_license_page'
 	);
 }
+add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
 
 /**
  * Render the license page.
  */
-function pkart_product_secondary_image_hover_render_page(): void {
+function render_license_page(): void {
 	echo '<div class="wrap">';
-	pkart_product_secondary_image_hover_render_license_section();
+	render_license_section();
 	echo '</div>';
 }
 
 /**
  * Render the reusable licensing section on any admin page.
- *
- * @param array $args Optional title and description overrides.
  */
-function pkart_product_secondary_image_hover_render_license_section( array $args = [] ): void {
-	$args = wp_parse_args(
-		$args,
-		[
-			/* translators: %s: plugin menu title. */
-			'title'       => sprintf( __( '%s License', PKART_PRODUCT_SKU ), 'Product Secondary Image Hover' ),
-			'description' => __( 'Activate your license key to enable PRO updates and licensing validation.', PKART_PRODUCT_SKU ),
-		]
-	);
+function render_license_section( ): void {
+	global $licensing;
 
-	$licensing = new \Pkart\LicenseManager\V1\Licensing( PKART_PRODUCT_SKU, PKART_PRODUCT_VERSION );
+	// Reuse the existing instance instead of creating another one.
 	$action    = $licensing->admin_action();
 	$is_active = $licensing->is_active();
 	?>
-	<h1><?php echo esc_html( $args['title'] ); ?></h1>
-	<p><?php echo esc_html( $args['description'] ); ?></p>
+	<h1>Product Secondary Image Hover</h1>
+	<p>Activate your license key to enable PRO updates and licensing validation</p>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<?php wp_nonce_field( $action ); ?>
@@ -88,7 +75,6 @@ function pkart_product_secondary_image_hover_render_license_section( array $args
 				<th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', PKART_PRODUCT_SKU ); ?></label></th>
 				<td>
 					<input type="text" class="regular-text" id="pkart-license-key" name="license_key" value="" autocomplete="off">
-					<p class="description"><?php esc_html_e( 'Mock valid key: PKMOCK-2026-TEST-0001', PKART_PRODUCT_SKU ); ?></p>
 				</td>
 			</tr>
 		</table>
@@ -105,7 +91,6 @@ function pkart_product_secondary_image_hover_render_license_section( array $args
 	</form>
 	<?php
 }
-
 
 /**
  * Enqueue plugin CSS.
