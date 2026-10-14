@@ -8,6 +8,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/class-api.php';
+
 if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 	/**

@@ -26,7 +26,6 @@ if ( ! defined( 'PKART_PRODUCT_VERSION' ) ) {
 }
 
 if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
-	require_once __DIR__ . '/includes/licensing/class-api.php';
 	require_once __DIR__ . '/includes/licensing/class-licensing.php';
 }
 
