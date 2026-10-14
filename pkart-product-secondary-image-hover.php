@@ -66,6 +66,7 @@ function render_license_section( ): void {
 	?>
 	<h1>Product Secondary Image Hover</h1>
 	<p>Activate your license key to enable PRO updates and licensing validation</p>
+	<?php $licensing->render_notice(); ?>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<?php wp_nonce_field( $action ); ?>
@@ -74,7 +75,7 @@ function render_license_section( ): void {
 			<tr>
 				<th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', PKART_PRODUCT_SKU ); ?></label></th>
 				<td>
-					<input type="text" class="regular-text" id="pkart-license-key" name="license_key" value="" autocomplete="off">
+					<input type="text" class="regular-text" id="pkart-license-key" name="license_key" value="<?php echo esc_attr( $licensing->stored_key() ); ?>" autocomplete="off">
 				</td>
 			</tr>
 		</table>

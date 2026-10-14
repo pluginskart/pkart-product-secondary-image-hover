@@ -39,6 +39,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private $version;
 
 		/**
+		 * Option key for storing license state.
+		 *
+		 * @var string
+		 */
+		private $option_key;
+
+		/**
 		 * @param string $plugin_file Main plugin file (pass __FILE__ from the main plugin file).
 		 * @param string $product_sku Product SKU.
 		 * @param string $version     Plugin version.
@@ -48,6 +55,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			$this->plugin_file = $plugin_file;
 			$this->product_sku = $product_sku;
 			$this->version     = $version;
+			$this->option_key  = $product_sku . '_license';
 
 			register_activation_hook(
 				$this->plugin_file,
@@ -59,6 +67,17 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				[ $this, 'plugin_deactivate' ]
 			);
 
+			add_action( 'admin_post_' . $this->admin_action(), [ $this, 'handle_license_action' ] );
+
+		}
+
+		/**
+		 * admin-post action and nonce name for the license form.
+		 *
+		 * @return string
+		 */
+		public function admin_action() {
+			return $this->product_sku . '_license';
 		}
 
 		/**
@@ -82,66 +101,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @return array|\WP_Error
 		 */
 		public function register_plugin_event( $action ) {
-			$data = [
-				'license_key' => 'PKMOCK-2026-TEST-0001',
-				'product_sku' => $this->product_sku,
-				'version'     => $this->version,
-				'site_url'    => esc_url_raw( home_url() ),
-				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
-				'wp_version'  => get_bloginfo( 'version' ),
-				'php_version' => PHP_VERSION,
-				'wc_version'  => defined( 'WC_VERSION' ) ? WC_VERSION : '',
-				'multisite'   => is_multisite() ? 1 : 0,
-				'language'    => get_locale(),
-				'environment' => self::get_environment_type(),
-			];
-
-			// $write_plugins = fopen( WP_CONTENT_DIR . '/plugins-register-log.txt', 'a' );
-			// fwrite($write_plugins, print_r($data, true) . PHP_EOL);
-			// fclose($write_plugins);
-
+			$data = $this->get_pluginskart_data();
 			return ( new API() )->request( 'plugin', $action, $data );
 		}
-
-		/**
-		 * Activate a license key for this site and store the result.
-		 *
-		 * @param string $license_key License key.
-		 * @return array|\WP_Error
-		 */
-		public function activate( $license_key ) {
-			$license_key = sanitize_text_field( $license_key );
-
-			if ( ! $license_key ) {
-				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', $this->product_sku ) );
-			}
-
-			$response = $this->license_request( 'activate', $license_key );
-
-			return $response;
-		}
-
-		/**
-		 * Send a license request with the common payload.
-		 */
-		private function license_request( $action, $license_key ) {
-			return ( new API() )->request(
-				'license',
-				$action,
-				[
-					'license_key' => $license_key,
-					'product_sku' => $this->product_sku,
-					'site_url'    => home_url(),
-					'version'     => $this->version,
-				]
-			);
-		}
-
-		/*
-		 * ------------------------------------------------------------------
-		 * Admin form handling
-		 * ------------------------------------------------------------------
-		 */
 
 		/**
 		 * Handle the license form submitted to admin-post.php.
@@ -156,7 +118,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			$action      = sanitize_key( wp_unslash( $_POST['license_action'] ?? '' ) );
 			$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ?? '' ) );
 
-			$this->set_notice( $this->process_license_action( $action, $license_key ) );
+			$result = $this->process_license_action( $action, $license_key );
+
+			$this->set_notice( $result );
 
 			wp_safe_redirect( wp_get_referer() ?: admin_url() );
 			exit;
@@ -166,7 +130,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * Run one license action. Also usable by other plugin integrations.
 		 *
 		 * @param string $action      activate, validate, or deactivate.
-		 * @param string $license_key License key (activate only).
 		 * @return array|\WP_Error
 		 */
 		public function process_license_action( $action, $license_key = '' ) {
@@ -174,34 +137,77 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				case 'activate':
 					return $this->activate( $license_key );
 
+				case 'deactivate':
+					return $this->deactivate();
+
 				default:
 					return $this->error( 'pkart_invalid_license_action', __( 'Invalid license action.', $this->product_sku ) );
 			}
 		}
 
 		/**
-		 * admin-post action and nonce name for the license form.
-		 *
-		 * @return string
+		 * Activate a license key for this site and store the result.
 		 */
-		public function admin_action() {
-			return 'pkart_' . $this->product_sku . '_license';
+		public function activate( $license_key ) {
+			$license_key = sanitize_text_field( $license_key );
+			if ( ! $license_key ) {
+				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', $this->product_sku ) );
+			}
+			$response = $this->license_request( 'activate', $license_key );
+
+			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
+				$this->store( $license_key, $response );
+			}
+
+			return $response;
 		}
 
 		/**
-		 * Whether Pro features should be enabled.
-		 *
-		 * @return bool
+		 * Deactivate the stored license key for this site and clear local state.
 		 */
-		public function is_active() {
-			return 'active' === ( '' );
+		public function deactivate() {
+			$license_key = $this->stored_key();
+			if ( ! $license_key ) {
+				return $this->error( 'pkart_license_missing', __( 'No license key is active on this site.', $this->product_sku ) );
+			}
+
+			$response = $this->license_request( 'deactivate', $license_key );
+
+			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
+				delete_option( $this->option_key );
+			}
+
+			return $response;
 		}
 
 		/**
-		 * Build a WP_Error.
+		 * Send a license request with the common payload.
 		 */
-		private function error( $code, $message, $data = '' ) {
-			return new \WP_Error( $code, $message, $data );
+		private function license_request( $action, $license_key ) {
+			$data = $this->get_pluginskart_data( $license_key );
+
+			return ( new API() )->request( 'license', $action, $data );
+		}
+
+		/**
+		 * Get common plugin environment data.
+		 *
+		 * @param string|null $license_key Key to send; null reads the stored key.
+		 */
+		private function get_pluginskart_data( $license_key = null ): array {
+			return [
+				'license_key' => $license_key ?? $this->stored_key(),
+				'product_sku' => $this->product_sku,
+				'version'     => $this->version,
+				'site_url'    => esc_url_raw( home_url() ),
+				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
+				'wp_version'  => get_bloginfo( 'version' ),
+				'php_version' => PHP_VERSION,
+				'wc_version'  => defined( 'WC_VERSION' ) ? WC_VERSION : '',
+				'multisite'   => is_multisite() ? 1 : 0,
+				'language'    => get_locale(),
+				'environment' => self::get_environment_type(),
+			];
 		}
 
 		/**
@@ -231,6 +237,98 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			}
 
 			return 'production';
+		}
+
+		/**
+		 * Return the locally stored license state.
+		 *
+		 * @return array
+		 */
+		public function get_stored() {
+			$license = get_option( $this->option_key, [] );
+			return is_array( $license ) ? $license : [];
+		}
+
+		/**
+		 * Whether Pro features should be enabled.
+		 *
+		 * @return bool
+		 */
+		public function is_active() {
+			return 'active' === ( $this->get_stored()['response']['status'] ?? '' );
+		}
+
+		/**
+		 * Return the stored license key, or ''.
+		 */
+		public function stored_key() {
+			return (string) ( $this->get_stored()['license_key'] ?? '' );
+		}
+
+		/**
+		 * Persist a license key and its latest API response.
+		 */
+		private function store( $license_key, array $response ) {
+			update_option(
+				$this->option_key,
+				[
+					'license_key' => $license_key,
+					'response'    => $response,
+					'updated_at'  => time(),
+				],
+				false
+			);
+		}
+
+		/**
+		 * Keep the result of the last license action for the current user,
+		 * so the license screen can show it after the redirect.
+		 *
+		 * @param array|\WP_Error $result
+		 */
+		private function set_notice( $result ) {
+			if ( is_wp_error( $result ) ) {
+				$notice = [ 'type' => 'error', 'message' => $result->get_error_message() ];
+			} else {
+				$notice = [
+					'type'    => ! empty( $result['success'] ) ? 'success' : 'error',
+					'message' => $result['message'] ?? __( 'The licensing API returned an unexpected response.', $this->product_sku ),
+				];
+			}
+
+			set_transient( $this->notice_key(), $notice, MINUTE_IN_SECONDS );
+		}
+
+		/**
+		 * Print (and clear) the notice from the last license action.
+		 */
+		public function render_notice() {
+			$notice = get_transient( $this->notice_key() );
+			if ( ! is_array( $notice ) ) {
+				return;
+			}
+
+			delete_transient( $this->notice_key() );
+
+			printf(
+				'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
+				esc_attr( 'success' === $notice['type'] ? 'success' : 'error' ),
+				esc_html( $notice['message'] )
+			);
+		}
+
+		/**
+		 * Per-user transient key for license notices.
+		 */
+		private function notice_key() {
+			return $this->option_key . '_notice_' . get_current_user_id();
+		}
+
+		/**
+		 * Build a WP_Error.
+		 */
+		private function error( $code, $message, $data = '' ) {
+			return new \WP_Error( $code, $message, $data );
 		}
 	}
 }
