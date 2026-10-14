@@ -33,7 +33,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @param string $product_sku Product SKU.
 		 * @param string $version     Plugin version.
 		 */
-		public function __construct( $product_sku = '', $version = '' ) {
+		public function __construct( $product_sku, $version ) {
 			$this->product_sku = $product_sku;
 			$this->version     = $version;
 		}
@@ -49,25 +49,22 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		public static function init( $plugin_file, $product_sku, $version ): void {
 			$licensing = new self( $product_sku, $version );
-
-			register_activation_hook( $plugin_file, fn() => $licensing->register_plugin_event( 'activate', $product_sku, $version ) );
-			register_deactivation_hook( $plugin_file, fn() => $licensing->register_plugin_event( 'deactivate', $product_sku, $version ) );
+			register_activation_hook( $plugin_file, fn() => $licensing->register_plugin_event( 'activate' ) );
+			register_deactivation_hook( $plugin_file, fn() => $licensing->register_plugin_event( 'deactivate' ) );
 			add_action( 'admin_post_' . $licensing->admin_action(), [ $licensing, 'handle_license_action' ] );
 		}
 
 		/**
 		 * Send a plugin activate/deactivate lifecycle event.
 		 *
-		 * @param string $action      'activate' or 'deactivate'.
-		 * @param string $product_sku Product SKU.
-		 * @param string $version     Plugin version.
+		 * @param string $action 'activate' or 'deactivate'.
 		 * @return array|\WP_Error
 		 */
-		public function register_plugin_event( $action, $product_sku, $version ) {
+		public function register_plugin_event( $action ) {
 			$data = [
 				'license_key' => 'PKMOCK-2026-TEST-0001',
-				'product_sku' => $product_sku,
-				'version'     => $version,
+				'product_sku' => $this->product_sku,
+				'version'     => $this->version,
 				'site_url'    => esc_url_raw( home_url() ),
 				'ip_address'  => $_SERVER['REMOTE_ADDR'] ?? '',
 				'wp_version'  => get_bloginfo( 'version' ),
@@ -95,7 +92,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			$license_key = sanitize_text_field( $license_key );
 
 			if ( ! $license_key ) {
-				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', self::$product_sku ) );
+				return $this->error( 'pkart_license_missing', __( 'Please enter a license key.', $this->product_sku ) );
 			}
 
 			$response = $this->license_request( 'activate', $license_key );
@@ -112,9 +109,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				$action,
 				[
 					'license_key' => $license_key,
-					'product_sku' => self::$product_sku,
+					'product_sku' => $this->product_sku,
 					'site_url'    => home_url(),
-					'version'     => self::$version,
+					'version'     => $this->version,
 				]
 			);
 		}
@@ -130,7 +127,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		public function handle_license_action() {
 			if ( ! current_user_can( 'manage_options' ) ) {
-				wp_die( esc_html__( 'You are not allowed to manage this license.', self::$product_sku ) );
+				wp_die( esc_html__( 'You are not allowed to manage this license.', $this->product_sku ) );
 			}
 
 			check_admin_referer( $this->admin_action() );
@@ -157,7 +154,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 					return $this->activate( $license_key );
 
 				default:
-					return $this->error( 'pkart_invalid_license_action', __( 'Invalid license action.', self::$product_sku ) );
+					return $this->error( 'pkart_invalid_license_action', __( 'Invalid license action.', $this->product_sku ) );
 			}
 		}
 
