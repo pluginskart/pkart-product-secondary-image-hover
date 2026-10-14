@@ -16,6 +16,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 	class Licensing {
 
 		/**
+		 * Main plugin file (passed from the main plugin file).
+		 *
+		 * @var string
+		 */
+		private $plugin_file;
+
+		/**
 		 * Product SKU.
 		 *
 		 * @var string
@@ -30,14 +37,40 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private $version;
 
 		/**
+		 * @param string $plugin_file Main plugin file (pass __FILE__ from the main plugin file).
 		 * @param string $product_sku Product SKU.
 		 * @param string $version     Plugin version.
 		 */
-		public function __construct($file, $product_sku, $version ) {
+		public function __construct( $plugin_file, $product_sku, $version ) {
+
+			$this->plugin_file = $plugin_file;
 			$this->product_sku = $product_sku;
 			$this->version     = $version;
-			register_activation_hook( $file,  $this->register_plugin_event( 'activate' ) );
-			register_deactivation_hook( $file, $this->register_plugin_event( 'deactivate' ) );
+
+			register_activation_hook(
+				$this->plugin_file,
+				[ $this, 'plugin_activate' ]
+			);
+
+			register_deactivation_hook(
+				$this->plugin_file,
+				[ $this, 'plugin_deactivate' ]
+			);
+
+		}
+
+		/**
+		 * Plugin activation callback.
+		 */
+		public function plugin_activate() {
+			$this->register_plugin_event( 'activate' );
+		}
+
+		/**
+		 * Plugin deactivation callback.
+		 */
+		public function plugin_deactivate() {
+			$this->register_plugin_event( 'deactivate' );
 		}
 
 		/**
@@ -61,7 +94,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				'environment' => self::get_environment_type(),
 			];
 
-			// $write_plugins = fopen('plugins-register-log.txt', 'a');
+			// $write_plugins = fopen( WP_CONTENT_DIR . '/plugins-register-log.txt', 'a' );
 			// fwrite($write_plugins, print_r($data, true) . PHP_EOL);
 			// fclose($write_plugins);
 
