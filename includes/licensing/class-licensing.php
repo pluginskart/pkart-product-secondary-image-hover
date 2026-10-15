@@ -155,7 +155,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 			}
 			$response = $this->license_request( 'activate', $license_key );
 			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
-				$this->store( $license_key, $response );
+				$this->store( $license_key );
 			}
 			return $response;
 		}
@@ -177,8 +177,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				return $this->error( 'pkart_license_missing', __( 'No license is activated.', $this->product_sku ) );
 			}
 			$response = $this->license_request( 'validate', $license_key );
-			if ( ! is_wp_error( $response ) && isset( $response['status'] ) ) {
-				$this->store( $license_key, $response );
+			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
+				$this->store( $license_key );
 			}
 			return $response;
 		}
@@ -214,10 +214,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 		/**
 		 * Detect the site environment.
-		 *
-		 * wp_get_environment_type() defaults to 'production' when WP_ENVIRONMENT_TYPE
-		 * is not defined, so fall back to inspecting the host name.
-		 *
 		 * @return string 'local', 'staging', 'development' or 'production'.
 		 */
 		public static function get_environment_type() {
@@ -243,8 +239,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 		/**
 		 * Return the locally stored license state.
-		 *
-		 * @return array
 		 */
 		public function get_stored() {
 			$license = get_option( $this->option_key, [] );
@@ -257,26 +251,26 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @return bool
 		 */
 		public function is_active() {
-			return 'active' === ( $this->get_stored()['response']['status'] ?? '' );
+			return 'active' === ( $this->get_stored()['status'] ?? '' );
 		}
 
 		/**
 		 * Return the stored license key, or ''.
 		 */
 		public function stored_key() {
-			return (string) ( $this->get_stored()['license_key'] ?? '' );
+			return (string) ( $this->get_stored()['pkart_data']['license_key'] ?? '' );
 		}
 
 		/**
-		 * Persist a license key and its latest API response.
+		 * Persist a license key after a successful activation; the status is always stored as active.
 		 */
-		private function store( $license_key, array $response ) {
+		private function store( $license_key ) {
 			update_option(
 				$this->option_key,
 				[
-					'license_key' => $license_key,
-					'response'    => $response,
-					'updated_at'  => time(),
+					'pkart_data' => $this->get_pluginskart_data( $license_key ),
+					'status'     => 'active',
+					'updated_at' => time(),
 				],
 				false
 			);
@@ -284,9 +278,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 		/**
 		 * Keep the result of the last license action for the current user,
-		 * so the license screen can show it after the redirect.
-		 *
-		 * @param array|\WP_Error $result
 		 */
 		private function set_notice( $result ) {
 			if ( is_wp_error( $result ) ) {
