@@ -18,18 +18,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const PKART_PRODUCT_SKU     = 'pkart-product-secondary-image-hover';
-const PKART_PRODUCT_VERSION = '1.0.0';
+const PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU     = 'pkart-product-secondary-image-hover';
+const PKART_PRODUCT_SECONDARY_IMAGE_HOVER_VERSION = '1.0.0';
 
 if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 	require_once __DIR__ . '/includes/licensing/class-licensing.php';
 }
 
-// Main plugin file
-//new \Pkart\LicenseManager\V1\Licensing( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
+/**
+ * This plugin's licensing instance, created once and kept out of the global scope.
+ */
+function pkart_product_secondary_image_hover_licensing(): \Pkart\LicenseManager\V1\Licensing {
+    static $licensing;
 
-global $licensing;
-$licensing = new \Pkart\LicenseManager\V1\Licensing( __FILE__, 'pkart-product-secondary-image-hover', '1.0.0' );
+    return $licensing ??= new \Pkart\LicenseManager\V1\Licensing(
+        __FILE__,
+        PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU,
+        PKART_PRODUCT_SECONDARY_IMAGE_HOVER_VERSION
+    );
+}
+pkart_product_secondary_image_hover_licensing();
 
 /**
  * Add the license screen under Settings.
@@ -39,8 +47,8 @@ function pkart_product_secondary_image_hover_register_menu(): void {
 		'Product Secondary Image Hover License',
 		'Product Secondary Image Hover License',
 		'manage_options',
-		PKART_PRODUCT_SKU . '-license',
-		'render_license_page'
+		PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '-license',
+		'pkart_product_secondary_image_hover_render_license_page'
 	);
 }
 add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
@@ -48,24 +56,23 @@ add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
 /**
  * Render the license page.
  */
-function render_license_page(): void {
+function pkart_product_secondary_image_hover_render_license_page(): void {
 	echo '<div class="wrap">';
-	render_license_section();
+	pkart_product_secondary_image_hover_render_license_section();
 	echo '</div>';
 }
 
 /**
- * Render the reusable licensing section on any admin page.
+ * Render this plugin's licensing section on any admin page.
  */
-function render_license_section( ): void {
-	global $licensing;
-
-	// Reuse the existing instance instead of creating another one.
+function pkart_product_secondary_image_hover_render_license_section(): void {
+	$licensing = pkart_product_secondary_image_hover_licensing();
 	$action    = $licensing->admin_action();
 	$is_active = $licensing->is_active();
+	$field_id  = PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '-license-key';
 	?>
-	<h1>Product Secondary Image Hover</h1>
-	<p>Activate your license key to enable PRO updates and licensing validation</p>
+	<h1><?php esc_html_e( 'Product Secondary Image Hover', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></h1>
+	<p><?php esc_html_e( 'Activate your license key to enable PRO updates and licensing validation', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></p>
 	<?php $licensing->render_notice(); ?>
 
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
@@ -73,9 +80,9 @@ function render_license_section( ): void {
 		<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>">
 		<table class="form-table" role="presentation">
 			<tr>
-				<th scope="row"><label for="pkart-license-key"><?php esc_html_e( 'License key', PKART_PRODUCT_SKU ); ?></label></th>
+				<th scope="row"><label for="<?php echo esc_attr( $field_id ); ?>"><?php esc_html_e( 'License key', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></label></th>
 				<td>
-					<input type="text" class="regular-text" id="pkart-license-key" name="license_key" value="<?php echo esc_attr( $licensing->stored_key() ); ?>" autocomplete="off">
+					<input type="text" class="regular-text" id="<?php echo esc_attr( $field_id ); ?>" name="license_key" value="<?php echo esc_attr( $licensing->stored_key() ); ?>" autocomplete="off" <?php echo $is_active ? 'readonly' : ''; ?>>
 				</td>
 			</tr>
 		</table>
@@ -86,7 +93,7 @@ function render_license_section( ): void {
 				name="license_action"
 				value="<?php echo esc_attr( $is_active ? 'deactivate' : 'activate' ); ?>"
 			>
-				<?php echo esc_html( $is_active ? __( 'Deactivate License', PKART_PRODUCT_SKU ) : __( 'Activate License', PKART_PRODUCT_SKU ) ); ?>
+				<?php echo esc_html( $is_active ? __( 'Deactivate License', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) : __( 'Activate License', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ); ?>
 			</button>
 		</p>
 	</form>
