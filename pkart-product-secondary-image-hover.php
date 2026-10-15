@@ -57,20 +57,12 @@ add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
  * Render the license page.
  */
 function pkart_product_secondary_image_hover_render_license_page(): void {
-	echo '<div class="wrap">';
-	pkart_product_secondary_image_hover_render_license_section();
-	echo '</div>';
-}
-
-/**
- * Render this plugin's licensing section on any admin page.
- */
-function pkart_product_secondary_image_hover_render_license_section(): void {
 	$licensing = pkart_product_secondary_image_hover_licensing();
 	$action    = $licensing->admin_action();
 	$is_active = $licensing->is_active();
 	$field_id  = PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '-license-key';
 	?>
+	<div class="wrap">
 	<h1><?php esc_html_e( 'Product Secondary Image Hover', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></h1>
 	<p><?php esc_html_e( 'Activate your license key to enable PRO updates and licensing validation', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></p>
 	<?php $licensing->render_notice(); ?>
@@ -97,6 +89,7 @@ function pkart_product_secondary_image_hover_render_license_section(): void {
 			</button>
 		</p>
 	</form>
+	</div>
 	<?php
 }
 
