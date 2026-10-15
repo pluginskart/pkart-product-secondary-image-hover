@@ -169,21 +169,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
-		 * Re-check the stored license and store the latest status
-		 */
-		public function validate() {
-			$license_key = $this->stored_key();
-			if ( ! $license_key ) {
-				return $this->error( 'pkart_license_missing', __( 'No license is activated.', $this->product_sku ) );
-			}
-			$response = $this->license_request( 'validate', $license_key );
-			if ( ! is_wp_error( $response ) && ! empty( $response['success'] ) ) {
-				$this->store( $license_key );
-			}
-			return $response;
-		}
-
-		/**
 		 * Send a license request with the common payload.
 		 */
 		private function license_request( $action, $license_key = null ) {

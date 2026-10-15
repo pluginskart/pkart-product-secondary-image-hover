@@ -24,7 +24,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		 */
 		const ACTIONS = [
 			'plugin'  => [ 'activate', 'deactivate' ],
-			'license' => [ 'activate', 'deactivate', 'validate' ],
+			'license' => [ 'activate', 'deactivate' ],
 		];
 
 
