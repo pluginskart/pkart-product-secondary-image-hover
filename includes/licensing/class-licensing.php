@@ -238,6 +238,21 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
+		 * Persist a license key after a successful activation; the status is always stored as active.
+		 */
+		private function store( $license_key ) {
+			update_option(
+				$this->option_key,
+				[
+					'pkart_data' => $this->get_pluginskart_data( $license_key ),
+					'status'     => 'active',
+					'updated_at' => time(),
+				],
+				false
+			);
+		}
+
+		/**
 		 * Return the locally stored license state.
 		 */
 		public function get_stored() {
@@ -262,32 +277,17 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
-		 * Persist a license key after a successful activation; the status is always stored as active.
+		 * Keep the result of the last license action for the current user.
+		 *
+		 * @param array|\WP_Error $result Response from process_license_action().
 		 */
-		private function store( $license_key ) {
-			update_option(
-				$this->option_key,
-				[
-					'pkart_data' => $this->get_pluginskart_data( $license_key ),
-					'status'     => 'active',
-					'updated_at' => time(),
-				],
-				false
-			);
-		}
-
-		/**
-		 * Keep the result of the last license action for the current user,
-		 */
-		private function set_notice( $result ) {
-			if ( is_wp_error( $result ) ) {
-				$notice = [ 'type' => 'error', 'message' => $result->get_error_message() ];
-			} else {
-				$notice = [
-					'type'    => ! empty( $result['success'] ) ? 'success' : 'error',
-					'message' => $result['message'] ?? __( 'The licensing API returned an unexpected response.', $this->product_sku ),
+		private function set_notice( array|\WP_Error $result ): void {
+			$notice = $result instanceof \WP_Error
+				? [ 'type' => 'error', 'message' => $result->get_error_message() ]
+				: [
+					'type'    => empty( $result['success'] ) ? 'error' : 'success',
+					'message' => (string) ( $result['message'] ?? __( 'The licensing API returned an unexpected response.', $this->product_sku ) ),
 				];
-			}
 
 			set_transient( $this->notice_key(), $notice, MINUTE_IN_SECONDS );
 		}
@@ -295,26 +295,28 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		/**
 		 * Print (and clear) the notice from the last license action.
 		 */
-		public function render_notice() {
-			$notice = get_transient( $this->notice_key() );
+		public function render_notice(): void {
+			$key    = $this->notice_key();
+			$notice = get_transient( $key );
+
 			if ( ! is_array( $notice ) ) {
 				return;
 			}
 
-			delete_transient( $this->notice_key() );
+			delete_transient( $key );
 
 			printf(
 				'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
-				esc_attr( 'success' === $notice['type'] ? 'success' : 'error' ),
-				esc_html( $notice['message'] )
+				esc_attr( 'success' === ( $notice['type'] ?? '' ) ? 'success' : 'error' ),
+				esc_html( $notice['message'] ?? '' )
 			);
 		}
 
 		/**
 		 * Per-user transient key for license notices.
 		 */
-		private function notice_key() {
-			return $this->option_key . '_notice_' . get_current_user_id();
+		private function notice_key(): string {
+			return "{$this->option_key}_notice_" . get_current_user_id();
 		}
 
 		/**
