@@ -67,17 +67,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				[ $this, 'plugin_deactivate' ]
 			);
 
-			add_action( 'admin_post_' . $this->admin_action(), [ $this, 'handle_license_action' ] );
+			add_action( 'admin_post_' . $this->product_sku . '_license', [ $this, 'handle_license_action' ] );
 
-		}
-
-		/**
-		 * admin-post action and nonce name for the license form.
-		 *
-		 * @return string
-		 */
-		public function admin_action() {
-			return $this->product_sku . '_license';
 		}
 
 		/**
@@ -92,6 +83,14 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		public function plugin_deactivate() {
 			$this->register_plugin_event( 'deactivate' );
+		}
+
+		/**
+		 * Plugin update checker callback.
+		 */
+		public function plugin_update_checker() {
+			$data = $this->register_plugin_event( 'update-checker' );
+			return ( new API() )->request( 'plugin', 'update-checker', $data );
 		}
 
 		/**
@@ -113,7 +112,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 				wp_die( esc_html__( 'You are not allowed to manage this license.', $this->product_sku ) );
 			}
 
-			check_admin_referer( $this->admin_action() );
+			check_admin_referer( $this->product_sku . '_license' );
 
 			$action      = sanitize_key( wp_unslash( $_POST['license_action'] ?? '' ) );
 			$license_key = sanitize_text_field( wp_unslash( $_POST['license_key'] ?? '' ) );
@@ -183,7 +182,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		private function get_pluginskart_data( $license_key = null ): array {
 			return [
-				'license_key' => $license_key ?? $this->stored_key(),
+				'license_key' => $license_key ?? $this->get_stored()['pkart_data']['license_key'],
 				'product_sku' => $this->product_sku,
 				'version'     => $this->version,
 				'site_url'    => esc_url_raw( home_url() ),
@@ -243,22 +242,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		public function get_stored() {
 			$license = get_option( $this->option_key, [] );
 			return is_array( $license ) ? $license : [];
-		}
-
-		/**
-		 * Whether Pro features should be enabled.
-		 *
-		 * @return bool
-		 */
-		public function is_active() {
-			return 'active' === ( $this->get_stored()['status'] ?? '' );
-		}
-
-		/**
-		 * Return the stored license key, or ''.
-		 */
-		public function stored_key() {
-			return (string) ( $this->get_stored()['pkart_data']['license_key'] ?? '' );
 		}
 
 		/**

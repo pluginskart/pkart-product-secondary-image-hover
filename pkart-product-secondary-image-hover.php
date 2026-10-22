@@ -58,8 +58,8 @@ add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
  */
 function pkart_product_secondary_image_hover_render_license_page(): void {
 	$licensing = pkart_product_secondary_image_hover_licensing();
-	$action    = $licensing->admin_action();
-	$is_active = $licensing->is_active();
+	$action    = PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '_license';
+	$is_active = get_option( $action, [] )['status'] ?? false;
 	$field_id  = PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '-license-key';
 	?>
 	<div class="wrap">
@@ -74,7 +74,7 @@ function pkart_product_secondary_image_hover_render_license_page(): void {
 			<tr>
 				<th scope="row"><label for="<?php echo esc_attr( $field_id ); ?>"><?php esc_html_e( 'License key', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></label></th>
 				<td>
-					<input type="text" class="regular-text" id="<?php echo esc_attr( $field_id ); ?>" name="license_key" value="<?php echo esc_attr( $licensing->stored_key() ); ?>" autocomplete="off" <?php echo $is_active ? 'readonly' : ''; ?>>
+					<input type="text" class="regular-text" id="<?php echo esc_attr( $field_id ); ?>" name="license_key" value="<?php echo esc_attr( get_option( $action, [] )['pkart_data']['license_key'] ?? '' ); ?>" autocomplete="off" <?php echo $is_active ? 'readonly' : ''; ?>>
 				</td>
 			</tr>
 		</table>
@@ -105,7 +105,6 @@ function pkart_product_secondary_image_hover_enqueue_styles() {
 		'1.0.0'
 	);
 }
-
 add_action( 'wp_enqueue_scripts', 'pkart_product_secondary_image_hover_enqueue_styles' );
 
 
@@ -120,11 +119,7 @@ add_action( 'wp_enqueue_scripts', 'pkart_product_secondary_image_hover_enqueue_s
  * @param WP_Block $block_instance  Block instance.
  * @return string
  */
-function pkart_product_secondary_image_hover_append_gallery(
-	$block_content,
-	$block,
-	$block_instance
-) {
+function pkart_product_secondary_image_hover_append_gallery( $block_content, $block, $block_instance) {
 
 	// Only target the WooCommerce product image block.
 	if (

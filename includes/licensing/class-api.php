@@ -23,7 +23,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 		 * Allowed actions per route type. Mirrors the API server.
 		 */
 		const ACTIONS = [
-			'plugin'  => [ 'activate', 'deactivate' ],
+			'plugin'  => [ 'activate', 'deactivate', 'update-checker' ],
 			'license' => [ 'activate', 'deactivate' ],
 		];
 
