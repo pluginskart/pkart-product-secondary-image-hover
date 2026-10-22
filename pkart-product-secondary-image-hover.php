@@ -25,19 +25,8 @@ if ( ! class_exists( '\Pkart\LicenseManager\V1\Licensing', false ) ) {
 	require_once __DIR__ . '/includes/licensing/class-licensing.php';
 }
 
-/**
- * This plugin's licensing instance, created once and kept out of the global scope.
- */
-function pkart_product_secondary_image_hover_licensing(): \Pkart\LicenseManager\V1\Licensing {
-    static $licensing;
-
-    return $licensing ??= new \Pkart\LicenseManager\V1\Licensing(
-        __FILE__,
-        PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU,
-        PKART_PRODUCT_SECONDARY_IMAGE_HOVER_VERSION
-    );
-}
-pkart_product_secondary_image_hover_licensing();
+// Main plugin file
+new \Pkart\LicenseManager\V1\Licensing( __FILE__, PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU, PKART_PRODUCT_SECONDARY_IMAGE_HOVER_VERSION );
 
 /**
  * Add the license screen under Settings.
@@ -57,7 +46,6 @@ add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
  * Render the license page.
  */
 function pkart_product_secondary_image_hover_render_license_page(): void {
-	$licensing = pkart_product_secondary_image_hover_licensing();
 	$action    = PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '_license';
 	$is_active = get_option( $action, [] )['status'] ?? false;
 	$field_id  = PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU . '-license-key';
@@ -65,8 +53,18 @@ function pkart_product_secondary_image_hover_render_license_page(): void {
 	<div class="wrap">
 	<h1><?php esc_html_e( 'Product Secondary Image Hover', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></h1>
 	<p><?php esc_html_e( 'Activate your license key to enable PRO updates and licensing validation', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></p>
-	<?php $licensing->render_notice(); ?>
-
+	<?php
+	$notice_key = $action . '_notice_' . get_current_user_id();
+	$notice     = get_transient( $notice_key );
+	if ( is_array( $notice ) ) {
+		delete_transient( $notice_key );
+		printf(
+			'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
+			esc_attr( 'success' === ( $notice['type'] ?? '' ) ? 'success' : 'error' ),
+			esc_html( $notice['message'] ?? '' )
+		);
+	}
+	?>
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<?php wp_nonce_field( $action ); ?>
 		<input type="hidden" name="action" value="<?php echo esc_attr( $action ); ?>">

@@ -261,26 +261,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
-		 * Print (and clear) the notice from the last license action.
-		 */
-		public function render_notice(): void {
-			$key    = $this->notice_key();
-			$notice = get_transient( $key );
-
-			if ( ! is_array( $notice ) ) {
-				return;
-			}
-
-			delete_transient( $key );
-
-			printf(
-				'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
-				esc_attr( 'success' === ( $notice['type'] ?? '' ) ? 'success' : 'error' ),
-				esc_html( $notice['message'] ?? '' )
-			);
-		}
-
-		/**
 		 * Per-user transient key for license notices.
 		 */
 		private function notice_key(): string {
