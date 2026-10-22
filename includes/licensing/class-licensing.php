@@ -182,7 +182,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 */
 		private function get_pluginskart_data( $license_key = null ): array {
 			return [
-				'license_key' => $license_key ?? $this->get_stored()['pkart_data']['license_key'],
+				'license_key' => $license_key ?? ( $this->get_stored()['pkart_data']['license_key'] ?? '' ),
 				'product_sku' => $this->product_sku,
 				'version'     => $this->version,
 				'site_url'    => esc_url_raw( home_url() ),
