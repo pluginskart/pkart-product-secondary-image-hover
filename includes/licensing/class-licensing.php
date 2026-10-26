@@ -97,16 +97,11 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
-		 * Ask the API whether an update is available for this license.
+		 * Ask the API whether an update is available. Runs with or without a stored license key.
 		 */
 		public function plugin_update_checker() {
-			$license_key = $this->get_stored()['pkart_data']['license_key'] ?? '';
-			if ( ! $license_key ) {
-				return $this->error( 'pkart_license_missing', __( 'No active license for update checks.', $this->product_sku ) );
-			}
-
 			$data = [
-				'license_key' => $license_key,
+				'license_key' => $this->get_stored()['pkart_data']['license_key'] ?? '',
 				'product_sku' => $this->product_sku,
 				'version'     => $this->version,
 			];

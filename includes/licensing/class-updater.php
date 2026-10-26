@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 
 	/**
-	 * Expected `plugin?action=update-checker` response (only for a valid license):
+	 * Expected `plugin?action=update-checker` response:
 	 *   {
 	 *     "success": true,
 	 *     "name": "Product Secondary Image Hover",
@@ -80,7 +80,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 
 			$remote = $this->get_remote();
 
+			// No update data: make sure no stale notice is kept.
 			if ( ! $remote ) {
+				unset( $transient->response[ $this->basename ] );
 				return $transient;
 			}
 
@@ -91,8 +93,6 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 				'new_version'  => $remote['new_version'],
 				'url'          => $remote['homepage'] ?? '',
 				'requires'     => $remote['requires'] ?? '',
-				'tested'       => $remote['tested'] ?? '',
-				'requires_php' => $remote['requires_php'] ?? '',
 			];
 
 			if ( version_compare( $this->version, $remote['new_version'], '<' ) ) {
