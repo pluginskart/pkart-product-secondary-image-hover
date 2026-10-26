@@ -3,12 +3,14 @@
 namespace Pkart\LicenseManager\V1;
 
 use Pkart\LicenseManager\V1\Licensing\API;
+use Pkart\LicenseManager\V1\Licensing\Updater;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 require_once __DIR__ . '/class-api.php';
+require_once __DIR__ . '/class-updater.php';
 
 if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
@@ -46,6 +48,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		private $option_key;
 
 		/**
+		 * Update checker.
+		 *
+		 * @var Updater
+		 */
+		private $updater;
+
+		/**
 		 * @param string $plugin_file Main plugin file (pass __FILE__ from the main plugin file).
 		 * @param string $product_sku Product SKU.
 		 * @param string $version     Plugin version.
@@ -69,6 +78,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 			add_action( 'admin_post_' . $this->product_sku . '_license', [ $this, 'handle_license_action' ] );
 
+			$this->updater = new Updater( $this, $this->plugin_file, $this->version );
+
 		}
 
 		/**
@@ -86,10 +97,19 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		}
 
 		/**
-		 * Plugin update checker callback.
+		 * Ask the API whether an update is available for this license.
 		 */
 		public function plugin_update_checker() {
-			$data = $this->register_plugin_event( 'update-checker' );
+			$license_key = $this->get_stored()['pkart_data']['license_key'] ?? '';
+			if ( ! $license_key ) {
+				return $this->error( 'pkart_license_missing', __( 'No active license for update checks.', $this->product_sku ) );
+			}
+
+			$data = [
+				'license_key' => $license_key,
+				'product_sku' => $this->product_sku,
+				'version'     => $this->version,
+			];
 			return ( new API() )->request( 'plugin', 'update-checker', $data );
 		}
 
