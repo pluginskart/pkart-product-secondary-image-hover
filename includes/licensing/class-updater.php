@@ -14,10 +14,10 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 	 * Expected `plugin?action=update-checker` response:
 	 *   {
 	 *     "success": true,
-	 *     "name": "Product Secondary Image Hover",
+	 * 	   "status": "update_available" | "up_to_date",
 	 *     "new_version": "1.1.0", "homepage": "https://...",
-	 *     "requires": "6.7", "tested": "7.1", "requires_php": "8.1",
-	 *     "last_updated": "2026-10-24"
+	 *     "requires": "7.0",
+	 *     "upgrade_notice": "Optional notice text shown in the update row (HTML allowed)"
 	 *   }
 	 */
 	class Updater {
@@ -87,12 +87,12 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 			}
 
 			$item = (object) [
-				'id'           => $this->basename,
-				'slug'         => $this->slug,
-				'plugin'       => $this->basename,
-				'new_version'  => $remote['new_version'],
-				'url'          => $remote['homepage'] ?? '',
-				'requires'     => $remote['requires'] ?? '',
+				'id'          => $this->basename,
+				'slug'        => $this->slug,
+				'plugin'      => $this->basename,
+				'new_version' => $remote['new_version'],
+				'url'         => $remote['homepage'] ?? '',
+				'requires'    => $remote['requires'] ?? '',
 			];
 
 			if ( version_compare( $this->version, $remote['new_version'], '<' ) ) {
@@ -125,6 +125,11 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 
 			$data['new_version'] = $data['new_version'] ?? $data['version'] ?? '';
 
+			/**
+			 * Use this for testing instead of editing the API response.
+			 */
+			$data = apply_filters( 'pkart_sdk_update_data', $data, $this->basename );
+
 			if ( ! $data['new_version'] ) {
 				return $this->remote = false;
 			}
@@ -138,17 +143,18 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 		}
 
 		public function update_row( $file, $plugin_data ) {
-			$update = get_site_transient( 'update_plugins' )->response[ $file ] ?? null;
-			if ( ! $update ) {
+			// show the row only when it offers a newer version with a notice.
+			$remote = $this->get_remote();
+			if ( ! $remote || empty( $remote['upgrade_notice'] ) || ! version_compare( $this->version, $remote['new_version'], '<' ) ) {
 				return;
 			}
 
 			// Use the URL from the API if it sent one, otherwise the default site page.
-			$details_url = ! empty( $update->url ) ? $update->url : 'https://www.pluginskart.com/';
+			$details_url = ! empty( $remote['homepage'] ) ? $remote['homepage'] : 'https://www.pluginskart.com/';
 
 			printf(
 				'<tr class="plugin-update-tr active"><td colspan="4" class="plugin-update colspanchange"><div class="update-message notice inline notice-warning notice-alt"><p>%1$s <a href="%2$s" target="_blank" rel="noopener noreferrer">%3$s<span class="screen-reader-text"> %4$s</span></a></p></div></td></tr>',
-				esc_html( sprintf( 'Version %s of %s is available for your licensed site.', $update->new_version, $plugin_data['Name'] ) ),
+				wp_kses_post( $remote['upgrade_notice'] ),
 				esc_url( $details_url ),
 				esc_html__( 'View details', $this->basename ),
 				esc_html__( '(opens in a new tab)', $this->basename )
