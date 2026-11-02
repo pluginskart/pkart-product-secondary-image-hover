@@ -17,7 +17,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 
 		const REQUEST_TIMEOUT = 15;
 
-		Const API_BASE_URL = 'https://pluginskartplugins.local/wp-json/pkart-sdk/v1/';
+		const API_BASE_URL = 'https://gateway.pluginskart.com/api/v1/pkart-sdk/';
 
 		/**
 		 * Allowed actions per route type. Mirrors the API server.
