@@ -45,9 +45,13 @@ add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
 /**
  * Strip the license status from the address bar so a reload does not repeat the notice.
  */
-add_filter( 'removable_query_args', function( $args ) {
-    return array_merge( (array) $args, ['pkart_license_status'] );
-} );
+add_filter(
+	'removable_query_args',
+	function ( array $args ): array {
+		$args[] = 'pkart_license_status';
+		return $args;
+	}
+);
 
 /**
  * Render the license page.
