@@ -17,7 +17,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 	 * 	   "status": "update_available" | "up_to_date",
 	 *     "new_version": "1.1.0", "homepage": "https://...",
 	 *     "requires": "7.0",
-	 *     "upgrade_notice": "Optional notice text shown in the update row (HTML allowed)"
+	 *     "message": "Optional notice text shown in the update row (HTML allowed)"
 	 *   }
 	 */
 	class Updater {
@@ -145,7 +145,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 		public function update_row( $file, $plugin_data ) {
 			// show the row only when it offers a newer version with a notice.
 			$remote = $this->get_remote();
-			if ( ! $remote || empty( $remote['upgrade_notice'] ) || ! version_compare( $this->version, $remote['new_version'], '<' ) ) {
+			if ( ! $remote || empty( $remote['message'] ) || ! version_compare( $this->version, $remote['new_version'], '<' ) ) {
 				return;
 			}
 
@@ -154,7 +154,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\Updater' ) ) {
 
 			printf(
 				'<tr class="plugin-update-tr active"><td colspan="4" class="plugin-update colspanchange"><div class="update-message notice inline notice-warning notice-alt"><p>%1$s <a href="%2$s" target="_blank" rel="noopener noreferrer">%3$s<span class="screen-reader-text"> %4$s</span></a></p></div></td></tr>',
-				wp_kses_post( $remote['upgrade_notice'] ),
+				wp_kses_post( $remote['message'] ),
 				esc_url( $details_url ),
 				esc_html__( 'View details', $this->basename ),
 				esc_html__( '(opens in a new tab)', $this->basename )
