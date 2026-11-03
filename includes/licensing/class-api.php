@@ -15,7 +15,7 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 	 */
 	class API {
 
-		const REQUEST_TIMEOUT = 15;
+		const REQUEST_TIMEOUT = 30;
 
 		const API_BASE_URL = 'https://gateway.pluginskart.com/api/v1/pkart-sdk/';
 
@@ -44,7 +44,13 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			$url      = add_query_arg( 'action', $action, trailingslashit( self::API_BASE_URL ) . $type );
 			$response = wp_remote_post( $url, $this->request_args( $url, $data ) );
 
-			return is_wp_error( $response ) ? $response : $this->parse_response( $response );
+			if ( is_wp_error( $response ) ) {
+				return $this->is_timeout( $response )
+					? $this->error( 'pkart_api_timeout', __( 'The licensing server is taking too long to respond. Please try again in a moment.' ) )
+					: $response;
+			}
+
+			return $this->parse_response( $response );
 		}
 
 		/**
@@ -95,6 +101,14 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing\\API' ) ) {
 			$decoded['_http_status'] = $status;
 
 			return $decoded;
+		}
+
+		/**
+		 * Whether a transport error is a timeout (cURL error 28).
+		 */
+		private function is_timeout( \WP_Error $error ) {
+			return false !== stripos( $error->get_error_message(), 'cURL error 28' )
+				|| false !== stripos( $error->get_error_message(), 'timed out' );
 		}
 
 		/**
