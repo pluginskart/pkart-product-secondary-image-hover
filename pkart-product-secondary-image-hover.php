@@ -43,17 +43,6 @@ function pkart_product_secondary_image_hover_register_menu(): void {
 add_action( 'admin_menu', 'pkart_product_secondary_image_hover_register_menu' );
 
 /**
- * Strip the license status from the address bar so a reload does not repeat the notice.
- */
-add_filter(
-	'removable_query_args',
-	function ( array $args ): array {
-		$args[] = 'pkart_license_status';
-		return $args;
-	}
-);
-
-/**
  * Render the license page.
  */
 function pkart_product_secondary_image_hover_render_license_page(): void {
@@ -65,22 +54,14 @@ function pkart_product_secondary_image_hover_render_license_page(): void {
 	<h1><?php esc_html_e( 'Product Secondary Image Hover', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></h1>
 	<p><?php esc_html_e( 'Activate your license key to enable PRO updates and licensing validation', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ); ?></p>
 	<?php
-	// Status from the latest license API response, passed back by the SDK redirect.
-	$status = sanitize_key( wp_unslash( $_GET['pkart_license_status'] ?? '' ) );
-	if ( $status ) {
-		$notices = [
-			'active'                => [ 'success', __( 'Your license has been activated successfully.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ],
-			'inactive'           => [ 'success', __( 'Your license has been deactivated successfully.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ],
-			'limit_reached'         => [ 'error', __( 'This license key has reached its activation limit. Deactivate it on another site or upgrade your license.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ],
-			'expired'               => [ 'error', __( 'This license key has expired. Please renew your license to continue receiving updates.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ],
-			'invalid'               => [ 'error', __( 'This license key is invalid. Please check the key and try again.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ],
-			'pkart_license_missing' => [ 'error', __( 'Please enter a license key.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ],
-		];
-		[ $type, $message ] = $notices[ $status ] ?? [ 'error', __( 'Unable to process your license request. Please try again later.', PKART_PRODUCT_SECONDARY_IMAGE_HOVER_SKU ) ];
+	$notice_key = $action . '_notice_' . get_current_user_id();
+	$notice     = get_transient( $notice_key );
+	if ( is_array( $notice ) ) {
+		delete_transient( $notice_key );
 		printf(
 			'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
-			esc_attr( $type ),
-			esc_html( $message )
+			esc_attr( 'success' === ( $notice['type'] ?? '' ) ? 'success' : 'error' ),
+			esc_html( $notice['message'] ?? '' )
 		);
 	}
 	?>

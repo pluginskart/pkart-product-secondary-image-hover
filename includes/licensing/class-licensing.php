@@ -134,10 +134,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 
 			$result = $this->process_license_action( $action, $license_key );
 
-			// Pass only the status of this response back; the settings page maps it to a message.
-			$status = $result instanceof \WP_Error ? $result->get_error_code() : ( $result['status'] ?? '' );
+			$this->set_notice( $result );
 
-			wp_safe_redirect( add_query_arg( 'pkart_license_status', sanitize_key( $status ) ?: 'unknown', wp_get_referer() ?: admin_url() ) );
+			wp_safe_redirect( wp_get_referer() ?: admin_url() );
 			exit;
 		}
 
@@ -258,6 +257,29 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		public function get_stored() {
 			$license = get_option( $this->option_key, [] );
 			return is_array( $license ) ? $license : [];
+		}
+
+		/**
+		 * Keep the result of the last license action for the current user.
+		 *
+		 * @param array|\WP_Error $result Response from process_license_action().
+		 */
+		private function set_notice( array|\WP_Error $result ): void {
+			$notice = $result instanceof \WP_Error
+				? [ 'type' => 'error', 'message' => $result->get_error_message() ]
+				: [
+					'type'    => empty( $result['success'] ) ? 'error' : 'success',
+					'message' => (string) ( $result['message'] ?? __( 'The licensing API returned an unexpected response.', $this->product_sku ) ),
+				];
+
+			set_transient( $this->notice_key(), $notice, MINUTE_IN_SECONDS );
+		}
+
+		/**
+		 * Per-user transient key for license notices.
+		 */
+		private function notice_key(): string {
+			return "{$this->option_key}_notice_" . get_current_user_id();
 		}
 
 		/**
