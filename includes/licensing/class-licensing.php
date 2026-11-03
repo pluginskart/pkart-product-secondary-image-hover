@@ -179,9 +179,8 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * Deactivate the stored license key for this site and clear local state.
 		 */
 		public function deactivate() {
-			$response = $this->license_request( 'deactivate' );
 			delete_option( $this->option_key );
-			return $response;
+			return $this->license_request( 'deactivate' );
 		}
 
 		/**
