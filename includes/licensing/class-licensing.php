@@ -197,8 +197,9 @@ if ( ! class_exists( 'Pkart\\LicenseManager\\V1\\Licensing' ) ) {
 		 * @param string|null $license_key Key to send; null reads the stored key.
 		 */
 		private function get_pluginskart_data( $license_key = null ): array {
+			$license_key = $license_key ?? ( $this->get_stored()['pkart_data']['license_key'] ?? null );
 			return [
-				'license_key' => $license_key ?? ( $this->get_stored()['pkart_data']['license_key'] ?? '' ),
+				'license_key' => '' === $license_key ? null : $license_key,
 				'product_sku' => $this->product_sku,
 				'version'     => $this->version,
 				'site_url'    => esc_url_raw( home_url() ),
