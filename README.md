@@ -5,7 +5,7 @@
 - Requires at least: 6.7
 - Tested up to: 7.1
 - Requires PHP: 8.1
-- Stable tag: 1.0.0
+- Stable tag: 1.0.2
 - License: GPL-2.0-or-later
 - License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -122,6 +122,14 @@ Product Secondary Image Hover does not collect, store, or transmit personal data
 
 The plugin does not connect to any external service.
 
+## Screenshots
+
+### 1. Product image on the shop page before hover
+![Product image before hover](assets/images/screenshots/screenshot-1.png)
+
+### 2. Secondary image shown on hover
+![Secondary image on hover](assets/images/screenshots/screenshot-2.png)
+
 ## Requirements
 
 - WordPress 6.7 or later
@@ -130,25 +138,23 @@ The plugin does not connect to any external service.
 
 ## Changelog
 
-### 1.1.0
+### 1.0.0
 
-- Added support for classic WooCommerce product loops.
-- Improved WooCommerce Product Collection block support.
-- Updated secondary image handling.
-- Improved accessibility of the secondary image.
-- Updated documentation.
-- Improved compatibility with WooCommerce product thumbnails.
-
-### 1.0.1
-
-- Added WooCommerce Product Collection block support.
-- Added the first gallery image as a secondary product image.
-- Added CSS-based hover functionality.
-- Added the `product-secondary-image` CSS class.
-- Excluded single-product pages.
+- Initial release.
+- Displays the first product gallery image as a secondary image on hover.
+- Supports classic WooCommerce product loops.
+- Supports the WooCommerce Product Collection block.
+- CSS-based hover effect (no JavaScript required).
+- Adds the `product-secondary-image` CSS class for custom styling.
+- Accessible secondary image markup.
+- Compatible with WooCommerce product thumbnails.
+- Disabled on single-product pages.
 
 ## Upgrade Notice
 
-### 1.1.0
+### 1.0.1
 
 Improved WooCommerce compatibility and added classic product loop support.
+
+### 1.0.2
+Main plugin file renamed. The plugin will be deactivated after updating — please reactivate it from Plugins.

@@ -3,14 +3,14 @@
  * Plugin Name:       Product Secondary Image Hover
  * Plugin URI:        https://github.com/pluginskart/product-secondary-image-hover
  * Description:       Automatically displays the first WooCommerce product gallery image when hovering over product images.
- * Version:           1.0.0
+ * Version:           1.0.2
  * Requires at least: 6.7
  * Requires PHP:      8.1
  * Author:            PluginsKart
  * Author URI:        https://www.pluginskart.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       product-secondary-image-hover
+ * Text Domain:       pluginskart-product-secondary-image-hover
  * Requires Plugins:  woocommerce
  */
 
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function pkart_product_secondary_image_hover_enqueue_styles() {
 
 	wp_enqueue_style(
-		'product-secondary-image-hover',
+		'pluginskart-product-secondary-image-hover',
 		plugin_dir_url( __FILE__ ) . 'assets/css/style.css',
 		array(),
 		'1.0.0'
